@@ -89,8 +89,8 @@ class McpClient {
       // Get or create client
       const client = await this.getOrCreateClient(connectionKey, transport);
 
-      // Strip prefix and execute (same for all transports!)
-      const prefixName = tool.catalogName || tool.mcpServerName || "unknown";
+      // Strip server name prefix from tool name
+      const prefixName = tool.mcpServerName || "unknown";
       const mcpToolName = this.stripServerPrefix(toolCall.name, prefixName);
 
       const result = await client.callTool({
