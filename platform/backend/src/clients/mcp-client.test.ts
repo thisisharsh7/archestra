@@ -105,6 +105,64 @@ describe("McpClient", () => {
       });
     });
 
+    test("strips server name prefix when catalog name differs from server name", async () => {
+      const secret = await SecretModel.create({
+        secret: {
+          access_token: "test-token",
+        },
+      });
+
+      // create catalog with name "n8n"
+      const n8nCatalog = await InternalMcpCatalogModel.create({
+        name: "n8n",
+        serverType: "remote",
+        serverUrl: "https://mcp.context7.com/mcp",
+      });
+
+      // install MCP server with different name "n8n-lidar"
+      const n8nServer = await McpServerModel.create({
+        name: "n8n-lidar",
+        secretId: secret.id,
+        catalogId: n8nCatalog.id,
+        serverType: "remote",
+      });
+
+      const tool = await ToolModel.createToolIfNotExists({
+        name: "n8n-lidar__get_workflow",
+        description: "Get workflow from n8n",
+        parameters: {},
+        catalogId: n8nCatalog.id,
+        mcpServerId: n8nServer.id,
+      });
+
+      await AgentToolModel.create(agentId, tool.id);
+
+      mockCallTool.mockResolvedValueOnce({
+        content: [{ type: "text", text: "Workflow data" }],
+        isError: false,
+      });
+
+      const toolCall = {
+        id: "call_123",
+        name: "n8n-lidar__get_workflow",
+        arguments: { workflowId: "123" },
+      };
+
+      const result = await mcpClient.executeToolCall(toolCall, agentId);
+
+      expect(mockCallTool).toHaveBeenCalledWith({
+        name: "get_workflow",
+        arguments: { workflowId: "123" },
+      });
+
+      expect(result).toMatchObject({
+        id: "call_123",
+        content: [{ type: "text", text: "Workflow data" }],
+        isError: false,
+        name: "n8n-lidar__get_workflow",
+      });
+    });
+
     describe("Response Modifier Templates", () => {
       test("applies simple text template to tool response", async () => {
         // Create MCP tool with response modifier template
