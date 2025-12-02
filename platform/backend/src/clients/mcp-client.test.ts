@@ -163,6 +163,65 @@ describe("McpClient", () => {
       });
     });
 
+    test("falls back to catalog name prefix when server name prefix doesn't match", async () => {
+      const secret = await SecretModel.create({
+        secret: {
+          access_token: "test-token",
+        },
+      });
+
+      // create catalog with name "n8n"
+      const n8nCatalog = await InternalMcpCatalogModel.create({
+        name: "n8n",
+        serverType: "remote",
+        serverUrl: "https://mcp.context7.com/mcp",
+      });
+
+      // install MCP server with different name "n8n-lidar"
+      const n8nServer = await McpServerModel.create({
+        name: "n8n-lidar",
+        secretId: secret.id,
+        catalogId: n8nCatalog.id,
+        serverType: "remote",
+      });
+
+      // tool stored with catalog name prefix (simulates local server behavior)
+      const tool = await ToolModel.createToolIfNotExists({
+        name: "n8n__create_workflow",
+        description: "Create workflow in n8n",
+        parameters: {},
+        catalogId: n8nCatalog.id,
+        mcpServerId: n8nServer.id,
+      });
+
+      await AgentToolModel.create(agentId, tool.id);
+
+      mockCallTool.mockResolvedValueOnce({
+        content: [{ type: "text", text: "Workflow created" }],
+        isError: false,
+      });
+
+      const toolCall = {
+        id: "call_456",
+        name: "n8n__create_workflow",
+        arguments: { workflowName: "test-workflow" },
+      };
+
+      const result = await mcpClient.executeToolCall(toolCall, agentId);
+
+      expect(mockCallTool).toHaveBeenCalledWith({
+        name: "create_workflow",
+        arguments: { workflowName: "test-workflow" },
+      });
+
+      expect(result).toMatchObject({
+        id: "call_456",
+        content: [{ type: "text", text: "Workflow created" }],
+        isError: false,
+        name: "n8n__create_workflow",
+      });
+    });
+
     describe("Response Modifier Templates", () => {
       test("applies simple text template to tool response", async () => {
         // Create MCP tool with response modifier template
