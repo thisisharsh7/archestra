@@ -3,11 +3,12 @@ import mcpClient from "@/clients/mcp-client";
 import db, { schema } from "@/database";
 import logger from "@/logging";
 import { McpServerRuntimeManager } from "@/mcp-server-runtime";
+import { secretManager } from "@/secretsmanager";
 import type { InsertMcpServer, McpServer, UpdateMcpServer } from "@/types";
+import AgentToolModel from "./agent-tool";
 import InternalMcpCatalogModel from "./internal-mcp-catalog";
 import McpServerTeamModel from "./mcp-server-team";
 import McpServerUserModel from "./mcp-server-user";
-import SecretModel from "./secret";
 import ToolModel from "./tool";
 
 class McpServerModel {
@@ -240,6 +241,24 @@ class McpServerModel {
 
     // For local servers, stop and remove the K8s pod
     if (mcpServer.serverType === "local") {
+      // Clean up agent_tools that use this server as execution source
+      // Must be done before deletion to ensure agents do not retain unusable tool assignments; FK constraint would only null out the reference, not remove the assignment
+      try {
+        const deletedAgentTools =
+          await AgentToolModel.deleteByExecutionSourceMcpServerId(id);
+        if (deletedAgentTools > 0) {
+          logger.info(
+            `Deleted ${deletedAgentTools} agent tool assignments for local MCP server: ${mcpServer.name}`,
+          );
+        }
+      } catch (error) {
+        logger.error(
+          { err: error },
+          `Failed to clean up agent tools for MCP server ${mcpServer.name}:`,
+        );
+        // Continue with deletion even if agent tool cleanup fails
+      }
+
       try {
         await McpServerRuntimeManager.removeMcpServer(id);
         logger.info(`Cleaned up K8s pod for MCP server: ${mcpServer.name}`);
@@ -262,7 +281,7 @@ class McpServerModel {
 
     // If the MCP server was deleted and it had an associated secret, delete the secret
     if (deleted && mcpServer.secretId) {
-      await SecretModel.delete(mcpServer.secretId);
+      await secretManager.deleteSecret(mcpServer.secretId);
     }
 
     // If the MCP server was deleted and had a catalogId, check if this was the last installation
@@ -321,7 +340,7 @@ class McpServerModel {
     // Load secrets if secretId is present
     let secrets: Record<string, unknown> = {};
     if (mcpServer.secretId) {
-      const secretRecord = await SecretModel.findById(mcpServer.secretId);
+      const secretRecord = await secretManager.getSecret(mcpServer.secretId);
       if (secretRecord) {
         secrets = secretRecord.secret;
       }
@@ -361,7 +380,7 @@ class McpServerModel {
     // Load secrets if secretId is provided
     let secrets: Record<string, unknown> = {};
     if (secretId) {
-      const secretRecord = await SecretModel.findById(secretId);
+      const secretRecord = await secretManager.getSecret(secretId);
       if (secretRecord) {
         secrets = secretRecord.secret;
       }
