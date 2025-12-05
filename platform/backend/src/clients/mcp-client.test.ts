@@ -5,6 +5,7 @@ import {
   AgentToolModel,
   InternalMcpCatalogModel,
   McpServerModel,
+  SecretModel,
   ToolModel,
 } from "@/models";
 import { secretManager } from "@/secretsmanager";
