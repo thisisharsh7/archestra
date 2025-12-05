@@ -4,11 +4,14 @@ const config: KnipConfig = {
   entry: [
     "tests/**/*.ts",
     "playwright.config.ts",
-    "auth.setup.ts",
     "consts.ts",
+    "fixtures.ts",
+    // Playwright setup files (used via testMatch in playwright.config.ts)
+    "auth.admin.setup.ts",
+    "auth.teams.setup.ts",
+    "auth.users.setup.ts",
   ],
   project: ["**/*.ts"],
-  ignore: [],
   ignoreDependencies: [
     // Workspace dependency - resolved by pnpm
     "@shared",
