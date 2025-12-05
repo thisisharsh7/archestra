@@ -22,6 +22,7 @@ import {
   DbSecretsManager,
   getSecretsManagerType,
   getVaultConfigFromEnv,
+  SecretsManagerConfigurationError,
   SecretsManagerType,
   VaultSecretManager,
 } from "./secretsmanager";
@@ -110,6 +111,8 @@ describe("createSecretManager", () => {
 
   test("should return DbSecretsManager when ARCHESTRA_SECRETS_MANAGER is not set", () => {
     delete process.env.ARCHESTRA_SECRETS_MANAGER;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_ADDR;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN;
     delete process.env.HASHICORP_VAULT_ADDR;
     delete process.env.HASHICORP_VAULT_TOKEN;
 
@@ -126,30 +129,34 @@ describe("createSecretManager", () => {
     expect(manager).toBeInstanceOf(DbSecretsManager);
   });
 
-  test("should return DbSecretsManager when ARCHESTRA_SECRETS_MANAGER is 'Vault' but vault env vars are missing", () => {
+  test("should return DbSecretsManager when ARCHESTRA_SECRETS_MANAGER is 'Vault' but VAULT_ADDR is not set", () => {
     process.env.ARCHESTRA_SECRETS_MANAGER = "Vault";
-    delete process.env.HASHICORP_VAULT_ADDR;
-    delete process.env.HASHICORP_VAULT_TOKEN;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_ADDR;
+    setEnterpriseLicenseActivated(true);
 
     const manager = createSecretManager();
 
     expect(manager).toBeInstanceOf(DbSecretsManager);
   });
 
-  test("should return DbSecretsManager when ARCHESTRA_SECRETS_MANAGER is 'Vault' but only HASHICORP_VAULT_ADDR is set", () => {
+  test("should return DbSecretsManager when ARCHESTRA_SECRETS_MANAGER is 'Vault' but token is missing (default auth method)", () => {
     process.env.ARCHESTRA_SECRETS_MANAGER = "Vault";
-    process.env.HASHICORP_VAULT_ADDR = "http://localhost:8200";
-    delete process.env.HASHICORP_VAULT_TOKEN;
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN;
+    setEnterpriseLicenseActivated(true);
 
     const manager = createSecretManager();
 
     expect(manager).toBeInstanceOf(DbSecretsManager);
   });
 
-  test("should return DbSecretsManager when ARCHESTRA_SECRETS_MANAGER is 'Vault' but only HASHICORP_VAULT_TOKEN is set", () => {
+  test("should return DbSecretsManager when AUTH_METHOD=TOKEN but token is missing", () => {
     process.env.ARCHESTRA_SECRETS_MANAGER = "Vault";
-    delete process.env.HASHICORP_VAULT_ADDR;
-    process.env.HASHICORP_VAULT_TOKEN = "dev-root-token";
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "TOKEN";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN;
+    setEnterpriseLicenseActivated(true);
 
     const manager = createSecretManager();
 
@@ -158,8 +165,9 @@ describe("createSecretManager", () => {
 
   test("should return VaultSecretManager when ARCHESTRA_SECRETS_MANAGER is 'Vault' and vault env vars are set and enterprise license is activated", () => {
     process.env.ARCHESTRA_SECRETS_MANAGER = "Vault";
-    process.env.HASHICORP_VAULT_ADDR = "http://localhost:8200";
-    process.env.HASHICORP_VAULT_TOKEN = "dev-root-token";
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "TOKEN";
+    process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN = "dev-root-token";
     setEnterpriseLicenseActivated(true);
 
     const manager = createSecretManager();
@@ -169,8 +177,9 @@ describe("createSecretManager", () => {
 
   test("should return DbSecretsManager when ARCHESTRA_SECRETS_MANAGER is 'Vault' but enterprise license is not activated", () => {
     process.env.ARCHESTRA_SECRETS_MANAGER = "Vault";
-    process.env.HASHICORP_VAULT_ADDR = "http://localhost:8200";
-    process.env.HASHICORP_VAULT_TOKEN = "dev-root-token";
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "TOKEN";
+    process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN = "dev-root-token";
     setEnterpriseLicenseActivated(false);
 
     const manager = createSecretManager();
@@ -180,8 +189,39 @@ describe("createSecretManager", () => {
 
   test("should return DbSecretsManager even when vault env vars are set if ARCHESTRA_SECRETS_MANAGER is 'DB'", () => {
     process.env.ARCHESTRA_SECRETS_MANAGER = "DB";
-    process.env.HASHICORP_VAULT_ADDR = "http://localhost:8200";
-    process.env.HASHICORP_VAULT_TOKEN = "dev-root-token";
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "TOKEN";
+    process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN = "dev-root-token";
+
+    const manager = createSecretManager();
+
+    expect(manager).toBeInstanceOf(DbSecretsManager);
+  });
+
+  // Note: K8S auth integration test is skipped because it requires the K8s service account token file
+  // The K8S config parsing is tested in getVaultConfigFromEnv tests
+
+  test("should return DbSecretsManager when AUTH_METHOD=K8S but K8S_ROLE is missing", () => {
+    process.env.ARCHESTRA_SECRETS_MANAGER = "Vault";
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "K8S";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_K8S_ROLE;
+    setEnterpriseLicenseActivated(true);
+
+    const manager = createSecretManager();
+
+    expect(manager).toBeInstanceOf(DbSecretsManager);
+  });
+
+  // Note: AWS IAM auth integration test is skipped because it requires actual AWS credentials
+  // The AWS config parsing is tested in getVaultConfigFromEnv tests
+
+  test("should return DbSecretsManager when AUTH_METHOD=AWS but AWS_ROLE is missing", () => {
+    process.env.ARCHESTRA_SECRETS_MANAGER = "Vault";
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "AWS";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AWS_ROLE;
+    setEnterpriseLicenseActivated(true);
 
     const manager = createSecretManager();
 
@@ -200,33 +240,262 @@ describe("getVaultConfigFromEnv", () => {
     process.env = originalEnv;
   });
 
-  test("should return null when no vault env vars are set", () => {
-    delete process.env.HASHICORP_VAULT_ADDR;
-    delete process.env.HASHICORP_VAULT_TOKEN;
+  test("should throw with all errors when multiple env vars are missing (token auth)", () => {
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_ADDR;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN;
 
-    const config = getVaultConfigFromEnv();
-
-    expect(config).toBeNull();
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      SecretsManagerConfigurationError,
+    );
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      "ARCHESTRA_HASHICORP_VAULT_ADDR is not set. ARCHESTRA_HASHICORP_VAULT_TOKEN is not set.",
+    );
   });
 
-  test("should return null when only address is set", () => {
-    process.env.HASHICORP_VAULT_ADDR = "http://localhost:8200";
-    delete process.env.HASHICORP_VAULT_TOKEN;
-
-    const config = getVaultConfigFromEnv();
-
-    expect(config).toBeNull();
-  });
-
-  test("should return config when both env vars are set", () => {
-    process.env.HASHICORP_VAULT_ADDR = "http://localhost:8200";
-    process.env.HASHICORP_VAULT_TOKEN = "dev-root-token";
+  test("should default to token auth when AUTH_METHOD is not set", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN = "dev-root-token";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD;
 
     const config = getVaultConfigFromEnv();
 
     expect(config).toEqual({
       address: "http://localhost:8200",
+      authMethod: "token",
       token: "dev-root-token",
+      secretPath: "secret/data/archestra",
+    });
+  });
+
+  test("should throw when token is missing (default auth method)", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN;
+
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      SecretsManagerConfigurationError,
+    );
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      "ARCHESTRA_HASHICORP_VAULT_TOKEN is not set",
+    );
+  });
+
+  test("should throw when AUTH_METHOD=TOKEN but token is missing", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "TOKEN";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN;
+
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      SecretsManagerConfigurationError,
+    );
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      "ARCHESTRA_HASHICORP_VAULT_TOKEN is not set",
+    );
+  });
+
+  test("should return token auth config when AUTH_METHOD=TOKEN and token is set", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "TOKEN";
+    process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN = "dev-root-token";
+
+    const config = getVaultConfigFromEnv();
+
+    expect(config).toEqual({
+      address: "http://localhost:8200",
+      authMethod: "token",
+      token: "dev-root-token",
+      secretPath: "secret/data/archestra",
+    });
+  });
+
+  test("should return K8S auth config with defaults when AUTH_METHOD=K8S and role is set", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "K8S";
+    process.env.ARCHESTRA_HASHICORP_VAULT_K8S_ROLE = "archestra";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_K8S_TOKEN_PATH;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_K8S_MOUNT_POINT;
+
+    const config = getVaultConfigFromEnv();
+
+    expect(config).toEqual({
+      address: "http://localhost:8200",
+      authMethod: "kubernetes",
+      k8sRole: "archestra",
+      k8sTokenPath: "/var/run/secrets/kubernetes.io/serviceaccount/token",
+      k8sMountPoint: "kubernetes",
+      secretPath: "secret/data/archestra",
+    });
+  });
+
+  test("should throw when AUTH_METHOD=K8S but role is missing", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "K8S";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_K8S_ROLE;
+
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      SecretsManagerConfigurationError,
+    );
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      "ARCHESTRA_HASHICORP_VAULT_K8S_ROLE is not set",
+    );
+  });
+
+  test("should throw with all errors when multiple env vars are missing (K8S auth)", () => {
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_ADDR;
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "K8S";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_K8S_ROLE;
+
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      SecretsManagerConfigurationError,
+    );
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      "ARCHESTRA_HASHICORP_VAULT_ADDR is not set. ARCHESTRA_HASHICORP_VAULT_K8S_ROLE is not set.",
+    );
+  });
+
+  test("should throw for invalid AUTH_METHOD", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "invalid";
+
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      SecretsManagerConfigurationError,
+    );
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      'Expected "TOKEN", "K8S", or "AWS"',
+    );
+  });
+
+  test("should return AWS auth config with defaults when AUTH_METHOD=AWS and role is set", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "AWS";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AWS_ROLE = "archestra-role";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AWS_MOUNT_POINT;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AWS_REGION;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AWS_STS_ENDPOINT;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AWS_IAM_SERVER_ID;
+
+    const config = getVaultConfigFromEnv();
+
+    expect(config).toEqual({
+      address: "http://localhost:8200",
+      authMethod: "aws",
+      awsRole: "archestra-role",
+      awsMountPoint: "aws",
+      awsRegion: "us-east-1",
+      awsStsEndpoint: "https://sts.amazonaws.com",
+      awsIamServerIdHeader: undefined,
+      secretPath: "secret/data/archestra",
+    });
+  });
+
+  test("should throw when AUTH_METHOD=AWS but role is missing", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "AWS";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AWS_ROLE;
+
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      SecretsManagerConfigurationError,
+    );
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      "ARCHESTRA_HASHICORP_VAULT_AWS_ROLE is not set",
+    );
+  });
+
+  test("should throw with all errors when multiple env vars are missing (AWS auth)", () => {
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_ADDR;
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "AWS";
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_AWS_ROLE;
+
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      SecretsManagerConfigurationError,
+    );
+    expect(() => getVaultConfigFromEnv()).toThrow(
+      "ARCHESTRA_HASHICORP_VAULT_ADDR is not set. ARCHESTRA_HASHICORP_VAULT_AWS_ROLE is not set.",
+    );
+  });
+
+  test("should include optional AWS config when AUTH_METHOD=AWS", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "AWS";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AWS_ROLE = "archestra-role";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AWS_MOUNT_POINT = "custom-aws";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AWS_REGION = "eu-west-1";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AWS_STS_ENDPOINT =
+      "https://sts.eu-west-1.amazonaws.com";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AWS_IAM_SERVER_ID =
+      "vault.example.com";
+
+    const config = getVaultConfigFromEnv();
+
+    expect(config).toEqual({
+      address: "http://localhost:8200",
+      authMethod: "aws",
+      awsRole: "archestra-role",
+      awsMountPoint: "custom-aws",
+      awsRegion: "eu-west-1",
+      awsStsEndpoint: "https://sts.eu-west-1.amazonaws.com",
+      awsIamServerIdHeader: "vault.example.com",
+      secretPath: "secret/data/archestra",
+    });
+  });
+
+  test("should include optional K8s config when AUTH_METHOD=K8S", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "K8S";
+    process.env.ARCHESTRA_HASHICORP_VAULT_K8S_ROLE = "archestra";
+    process.env.ARCHESTRA_HASHICORP_VAULT_K8S_TOKEN_PATH = "/custom/token/path";
+    process.env.ARCHESTRA_HASHICORP_VAULT_K8S_MOUNT_POINT = "custom-k8s";
+
+    const config = getVaultConfigFromEnv();
+
+    expect(config).toEqual({
+      address: "http://localhost:8200",
+      authMethod: "kubernetes",
+      k8sRole: "archestra",
+      k8sTokenPath: "/custom/token/path",
+      k8sMountPoint: "custom-k8s",
+      secretPath: "secret/data/archestra",
+    });
+  });
+
+  test("should use custom secret path when ARCHESTRA_HASHICORP_VAULT_SECRET_PATH is set (TOKEN auth)", () => {
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "TOKEN";
+    process.env.ARCHESTRA_HASHICORP_VAULT_TOKEN = "dev-root-token";
+    process.env.ARCHESTRA_HASHICORP_VAULT_SECRET_PATH =
+      "custom/data/my-secrets";
+
+    const config = getVaultConfigFromEnv();
+
+    expect(config).toEqual({
+      address: "http://localhost:8200",
+      authMethod: "token",
+      token: "dev-root-token",
+      secretPath: "custom/data/my-secrets",
+    });
+  });
+
+  test("should use custom secret path when ARCHESTRA_HASHICORP_VAULT_SECRET_PATH is set (K8S auth)", () => {
+    // Ensure K8S optional vars are not set so defaults are used
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_K8S_TOKEN_PATH;
+    delete process.env.ARCHESTRA_HASHICORP_VAULT_K8S_MOUNT_POINT;
+
+    process.env.ARCHESTRA_HASHICORP_VAULT_ADDR = "http://localhost:8200";
+    process.env.ARCHESTRA_HASHICORP_VAULT_AUTH_METHOD = "K8S";
+    process.env.ARCHESTRA_HASHICORP_VAULT_K8S_ROLE = "archestra";
+    process.env.ARCHESTRA_HASHICORP_VAULT_SECRET_PATH =
+      "custom/data/my-secrets";
+
+    const config = getVaultConfigFromEnv();
+
+    expect(config).toEqual({
+      address: "http://localhost:8200",
+      authMethod: "kubernetes",
+      k8sRole: "archestra",
+      k8sTokenPath: "/var/run/secrets/kubernetes.io/serviceaccount/token",
+      k8sMountPoint: "kubernetes",
+      secretPath: "custom/data/my-secrets",
     });
   });
 });
@@ -234,7 +503,9 @@ describe("getVaultConfigFromEnv", () => {
 describe("VaultSecretManager", () => {
   const vaultConfig = {
     address: "http://localhost:8200",
+    authMethod: "token" as const,
     token: "dev-root-token",
+    secretPath: "secret/data/archestra",
   };
 
   beforeEach(() => {
@@ -253,7 +524,9 @@ describe("VaultSecretManager", () => {
 
       await expect(
         vaultManager.createSecret(secretValue, "testsecret"),
-      ).rejects.toThrow("Vault unavailable");
+      ).rejects.toThrow(
+        "An error occurred while accessing secrets. Please try again later or contact your administrator.",
+      );
 
       // Verify that no secret remains in the database
       expect(mockVaultClient.write).toHaveBeenCalledTimes(1);
@@ -417,7 +690,7 @@ describe("VaultSecretManager", () => {
       );
 
       await expect(vaultManager.deleteSecret(created.id)).rejects.toThrow(
-        "Vault unavailable",
+        "An error occurred while accessing secrets. Please try again later or contact your administrator.",
       );
 
       // Verify the database record still exists
@@ -478,7 +751,7 @@ describe("VaultSecretManager", () => {
       );
 
       await expect(vaultManager.getSecret(created.id)).rejects.toThrow(
-        "Vault unavailable",
+        "An error occurred while accessing secrets. Please try again later or contact your administrator.",
       );
 
       // Cleanup
@@ -543,7 +816,9 @@ describe("VaultSecretManager", () => {
 
       await expect(
         vaultManager.updateSecret(created.id, newSecretValue),
-      ).rejects.toThrow("Vault unavailable");
+      ).rejects.toThrow(
+        "An error occurred while accessing secrets. Please try again later or contact your administrator.",
+      );
 
       // Verify the database record was not updated (updatedAt should be same)
       const dbRecord = await SecretModel.findById(created.id);
