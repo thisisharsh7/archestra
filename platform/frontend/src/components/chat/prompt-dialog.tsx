@@ -87,12 +87,12 @@ export function PromptDialog({
   }, [open, prompt, allProfiles, agentId]);
 
   const handleSave = async () => {
-    if (!name || !agentId) {
+    if (!name.trim() || !agentId) {
       toast.error("Name and Profile are required");
       return;
     }
 
-    if (!userPrompt && !systemPrompt) {
+    if (!userPrompt.trim() && !systemPrompt.trim()) {
       toast.error("At least one prompt (User or System) is required");
       return;
     }
@@ -102,19 +102,19 @@ export function PromptDialog({
         await updatePrompt.mutateAsync({
           id: prompt.id,
           data: {
-            name,
+            name: name.trim(),
             agentId,
-            userPrompt: userPrompt || undefined,
-            systemPrompt: systemPrompt || undefined,
+            userPrompt: userPrompt.trim() || undefined,
+            systemPrompt: systemPrompt.trim() || undefined,
           },
         });
         toast.success("New version created successfully");
       } else {
         await createPrompt.mutateAsync({
-          name,
+          name: name.trim(),
           agentId,
-          userPrompt: userPrompt || undefined,
-          systemPrompt: systemPrompt || undefined,
+          userPrompt: userPrompt.trim() || undefined,
+          systemPrompt: systemPrompt.trim() || undefined,
         });
         toast.success("Prompt created successfully");
       }
@@ -235,9 +235,9 @@ export function PromptDialog({
           <Button
             onClick={handleSave}
             disabled={
-              !name ||
+              !name.trim() ||
               !agentId ||
-              (!userPrompt && !systemPrompt) ||
+              (!userPrompt.trim() && !systemPrompt.trim()) ||
               createPrompt.isPending ||
               updatePrompt.isPending
             }
