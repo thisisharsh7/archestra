@@ -2,7 +2,7 @@
 
 import type { archestraApiTypes } from "@shared";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { McpToolsDisplay } from "@/components/chat/mcp-tools-display";
 import { WithPermissions } from "@/components/roles/with-permissions";
@@ -86,14 +86,14 @@ export function PromptDialog({
     }
   }, [open, prompt, allProfiles, agentId]);
 
-  const handleSave = async () => {
-    if (!name.trim() || !agentId) {
-      toast.error("Name and Profile are required");
-      return;
-    }
+  const handleSave = useCallback(async () => {
+    // Trim values once at the start
+    const trimmedName = name.trim();
+    const trimmedUserPrompt = userPrompt.trim();
+    const trimmedSystemPrompt = systemPrompt.trim();
 
-    if (!userPrompt.trim() && !systemPrompt.trim()) {
-      toast.error("At least one prompt (User or System) is required");
+    if (!trimmedName || !agentId) {
+      toast.error("Name and Profile are required");
       return;
     }
 
@@ -102,19 +102,19 @@ export function PromptDialog({
         await updatePrompt.mutateAsync({
           id: prompt.id,
           data: {
-            name: name.trim(),
+            name: trimmedName,
             agentId,
-            userPrompt: userPrompt.trim() || undefined,
-            systemPrompt: systemPrompt.trim() || undefined,
+            userPrompt: trimmedUserPrompt || undefined,
+            systemPrompt: trimmedSystemPrompt || undefined,
           },
         });
         toast.success("New version created successfully");
       } else {
         await createPrompt.mutateAsync({
-          name: name.trim(),
+          name: trimmedName,
           agentId,
-          userPrompt: userPrompt.trim() || undefined,
-          systemPrompt: systemPrompt.trim() || undefined,
+          userPrompt: trimmedUserPrompt || undefined,
+          systemPrompt: trimmedSystemPrompt || undefined,
         });
         toast.success("Prompt created successfully");
       }
@@ -122,7 +122,16 @@ export function PromptDialog({
     } catch (_error) {
       toast.error("Failed to save prompt");
     }
-  };
+  }, [
+    name,
+    agentId,
+    userPrompt,
+    systemPrompt,
+    prompt,
+    updatePrompt,
+    createPrompt,
+    onOpenChange,
+  ]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -237,7 +246,6 @@ export function PromptDialog({
             disabled={
               !name.trim() ||
               !agentId ||
-              (!userPrompt.trim() && !systemPrompt.trim()) ||
               createPrompt.isPending ||
               updatePrompt.isPending
             }

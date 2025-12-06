@@ -24,7 +24,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PermissionButton } from "@/components/ui/permission-button";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
@@ -99,19 +98,31 @@ function TokenPriceInlineForm({
     [formData.provider],
   );
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      onSave(formData);
-    },
-    [formData, onSave],
-  );
-
   const isValid =
     formData.provider &&
     formData.model &&
     formData.pricePerMillionInput &&
     formData.pricePerMillionOutput;
+
+  const handleSubmit = useCallback(
+    (e?: React.FormEvent) => {
+      e?.preventDefault();
+      if (isValid) {
+        onSave(formData);
+      }
+    },
+    [formData, onSave, isValid],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSubmit();
+      }
+    },
+    [handleSubmit],
+  );
 
   return (
     <tr className="border-b bg-muted/30">
@@ -143,9 +154,7 @@ function TokenPriceInlineForm({
       <td className="p-4">
         <SearchableSelect
           value={formData.model}
-          onValueChange={(value) =>
-            setFormData({ ...formData, model: value })
-          }
+          onValueChange={(value) => setFormData({ ...formData, model: value })}
           placeholder="Select or type model"
           items={modelOptions}
           allowCustom
@@ -165,6 +174,7 @@ function TokenPriceInlineForm({
               pricePerMillionInput: e.target.value,
             })
           }
+          onKeyDown={handleKeyDown}
           placeholder="50.00"
           required
           className="w-full"
@@ -183,6 +193,7 @@ function TokenPriceInlineForm({
               pricePerMillionOutput: e.target.value,
             })
           }
+          onKeyDown={handleKeyDown}
           placeholder="50.00"
           required
           className="w-full"
@@ -194,12 +205,7 @@ function TokenPriceInlineForm({
             <Save className="h-4 w-4 mr-1" />
             Save
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            size="sm"
-          >
+          <Button type="button" variant="outline" onClick={onCancel} size="sm">
             <X className="h-4 w-4 mr-1" />
             Cancel
           </Button>

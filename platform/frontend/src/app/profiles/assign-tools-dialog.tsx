@@ -1,7 +1,13 @@
 "use client";
 
 import type { archestraApiTypes } from "@shared";
-import { ChevronDown, ChevronRight, Loader2, Search, Server } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  Search,
+  Server,
+} from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -409,65 +415,66 @@ export function AssignToolsDialog({
                           </button>
                         )}
                       </div>
-                    {selectedTools.some((t) => t.toolId === tool.id) &&
-                      (() => {
-                        const mcpCatalogItem = internalMcpCatalogItems?.find(
-                          (item) => item.id === tool.catalogId,
-                        );
-                        const catalogId = tool.catalogId ?? "";
-                        const isLocalServer =
-                          mcpCatalogItem?.serverType === "local";
-                        const selectedTool = selectedTools.find(
-                          (t) => t.toolId === tool.id,
-                        );
+                      {selectedTools.some((t) => t.toolId === tool.id) &&
+                        (() => {
+                          const mcpCatalogItem = internalMcpCatalogItems?.find(
+                            (item) => item.id === tool.catalogId,
+                          );
+                          const catalogId = tool.catalogId ?? "";
+                          const isLocalServer =
+                            mcpCatalogItem?.serverType === "local";
+                          const selectedTool = selectedTools.find(
+                            (t) => t.toolId === tool.id,
+                          );
 
-                        return (
-                          <div className="flex flex-col gap-1 mt-4">
-                            {isLocalServer ? (
-                              <>
-                                <span className="text-xs text-muted-foreground">
-                                  Credential to use:
-                                </span>
-                                <InstallationSelect
-                                  catalogId={catalogId}
-                                  onValueChange={(executionSourceId) =>
-                                    handleExecutionSourceChange(
-                                      tool.id,
-                                      executionSourceId ?? undefined,
-                                    )
-                                  }
-                                  value={
-                                    selectedTool?.executionSourceId ?? undefined
-                                  }
-                                  className="mb-4"
-                                  shouldSetDefaultValue
-                                />
-                              </>
-                            ) : (
-                              <>
-                                <span className="text-xs text-muted-foreground">
-                                  Credential to use:
-                                </span>
-                                <TokenSelect
-                                  catalogId={catalogId}
-                                  onValueChange={(credentialsSourceId) =>
-                                    handleCredentialsSourceChange(
-                                      tool.id,
-                                      credentialsSourceId ?? undefined,
-                                    )
-                                  }
-                                  value={
-                                    selectedTool?.credentialsSourceId ??
-                                    undefined
-                                  }
-                                  className="mb-4"
-                                  shouldSetDefaultValue
-                                />
-                              </>
-                            )}
-                          </div>
-                        );
-                      })()}
+                          return (
+                            <div className="flex flex-col gap-1 mt-4">
+                              {isLocalServer ? (
+                                <>
+                                  <span className="text-xs text-muted-foreground">
+                                    Credential to use:
+                                  </span>
+                                  <InstallationSelect
+                                    catalogId={catalogId}
+                                    onValueChange={(executionSourceId) =>
+                                      handleExecutionSourceChange(
+                                        tool.id,
+                                        executionSourceId ?? undefined,
+                                      )
+                                    }
+                                    value={
+                                      selectedTool?.executionSourceId ??
+                                      undefined
+                                    }
+                                    className="mb-4"
+                                    shouldSetDefaultValue
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  <span className="text-xs text-muted-foreground">
+                                    Credential to use:
+                                  </span>
+                                  <TokenSelect
+                                    catalogId={catalogId}
+                                    onValueChange={(credentialsSourceId) =>
+                                      handleCredentialsSourceChange(
+                                        tool.id,
+                                        credentialsSourceId ?? undefined,
+                                      )
+                                    }
+                                    value={
+                                      selectedTool?.credentialsSourceId ??
+                                      undefined
+                                    }
+                                    className="mb-4"
+                                    shouldSetDefaultValue
+                                  />
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
                       {isExpanded && tool.description && (
                         <p className="text-sm text-muted-foreground whitespace-pre-line">
                           {tool.description}
