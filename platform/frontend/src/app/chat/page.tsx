@@ -227,7 +227,12 @@ export default function ChatPage() {
   const toggleHideToolCalls = useCallback(() => {
     const newValue = !hideToolCalls;
     setHideToolCalls(newValue);
-    localStorage.setItem("archestra-chat-hide-tool-calls", String(newValue));
+    try {
+      localStorage.setItem("archestra-chat-hide-tool-calls", String(newValue));
+    } catch (error) {
+      // localStorage may be unavailable in private browsing or quota exceeded
+      console.error("Failed to persist hide tool calls preference", error);
+    }
   }, [hideToolCalls]);
 
   // Extract chat session properties (or use defaults if session not ready)

@@ -21,6 +21,7 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ai-elements/tool";
+import { ToolActivity } from "@/components/ai-elements/tool-activity";
 
 interface ChatMessagesProps {
   messages: UIMessage[];
@@ -67,100 +68,212 @@ export function ChatMessages({
     <Conversation className="h-full">
       <ConversationContent>
         <div className="max-w-4xl mx-auto">
-          {messages.map((message, idx) => (
-            <div key={message.id || idx}>
-              {message.parts.map((part, i) => {
-                // Skip tool result parts that immediately follow a tool invocation with same toolCallId
-                if (
-                  isToolPart(part) &&
-                  part.state === "output-available" &&
-                  i > 0
-                ) {
-                  const prevPart = message.parts[i - 1];
+          {messages.map((message, idx) => {
+            // When hideToolCalls is true, hide intermediate assistant messages
+            // Only show the last assistant message in a sequence
+            if (hideToolCalls && message.role === "assistant") {
+              // Check if there's a next message
+              const nextMessage = messages[idx + 1];
+              // If next message is also from assistant, hide current message
+              if (nextMessage && nextMessage.role === "assistant") {
+                return null;
+              }
+            }
+
+            // Collect tool parts for this message and all previous assistant messages in sequence
+            // This aggregates all tool calls from consecutive assistant messages into one array
+            // so they can be displayed together in the ToolActivity component
+            const toolParts = hideToolCalls
+              ? (() => {
+                  const tools: Array<{
+                    name: string;
+                    state:
+                      | ToolUIPart["state"]
+                      | "output-available"
+                      | "output-error";
+                  }> = [];
+
+                  // If this is an assistant message, collect tools from previous assistant messages too
+                  // This handles cases where the LLM makes multiple tool calls across streaming chunks
+                  if (message.role === "assistant") {
+                    // Go backwards to find all consecutive assistant messages
+                    // Stop when we hit a non-assistant message (user/system)
+                    for (let i = idx; i >= 0; i--) {
+                      const msg = messages[i];
+                      if (msg.role !== "assistant") break;
+
+                      // Collect tools from this message
+                      const msgTools = msg.parts
+                        .map((part, partIdx) => {
+                          if (
+                            isToolPart(part) &&
+                            (part.type?.startsWith("tool-") ||
+                              part.type === "dynamic-tool")
+                          ) {
+                            // Skip output parts that immediately follow input parts with same toolCallId
+                            if (
+                              part.state === "output-available" &&
+                              partIdx > 0
+                            ) {
+                              const prevPart = msg.parts[partIdx - 1];
+                              if (
+                                isToolPart(prevPart) &&
+                                prevPart.state === "input-available" &&
+                                prevPart.toolCallId === part.toolCallId
+                              ) {
+                                return null;
+                              }
+                            }
+
+                            // Look ahead for result part to determine final state
+                            let finalState = part.state || "input-available";
+                            const nextPart = msg.parts[partIdx + 1];
+                            if (
+                              nextPart &&
+                              isToolPart(nextPart) &&
+                              nextPart.state === "output-available" &&
+                              nextPart.toolCallId === part.toolCallId
+                            ) {
+                              // Check for errors
+                              const outputError = tryToExtractErrorFromOutput(
+                                nextPart.output,
+                              );
+                              const errorText =
+                                nextPart.errorText ?? outputError;
+                              finalState = errorText
+                                ? "output-error"
+                                : "output-available";
+                            } else if (part.output) {
+                              const outputError = tryToExtractErrorFromOutput(
+                                part.output,
+                              );
+                              const errorText = part.errorText ?? outputError;
+                              finalState = errorText
+                                ? "output-error"
+                                : "output-available";
+                            }
+
+                            const toolName =
+                              part.type === "dynamic-tool"
+                                ? part.toolName
+                                : part.type.replace("tool-", "");
+
+                            return {
+                              name: toolName || "Unknown",
+                              state: finalState,
+                            };
+                          }
+                          return null;
+                        })
+                        .filter((tool) => tool !== null);
+
+                      tools.push(...msgTools);
+                    }
+                  }
+
+                  return tools;
+                })()
+              : [];
+
+            // Find all text part indices
+            const textPartIndices = message.parts
+              .map((part, i) => (part.type === "text" ? i : -1))
+              .filter((i) => i !== -1);
+            const lastTextPartIndex =
+              textPartIndices.length > 0
+                ? textPartIndices[textPartIndices.length - 1]
+                : -1;
+
+            // When hideToolCalls is true, determine which text parts to hide
+            const shouldHideTextPart = (partIndex: number) => {
+              if (!hideToolCalls) return false;
+              // Only show the last text part when hideToolCalls is true
+              return (
+                textPartIndices.includes(partIndex) &&
+                partIndex !== lastTextPartIndex
+              );
+            };
+
+            return (
+              <div key={message.id || idx}>
+                {message.parts.map((part, i) => {
+                  // Skip tool result parts that immediately follow a tool invocation with same toolCallId
                   if (
-                    isToolPart(prevPart) &&
-                    prevPart.state === "input-available" &&
-                    prevPart.toolCallId === part.toolCallId
+                    isToolPart(part) &&
+                    part.state === "output-available" &&
+                    i > 0
+                  ) {
+                    const prevPart = message.parts[i - 1];
+                    if (
+                      isToolPart(prevPart) &&
+                      prevPart.state === "input-available" &&
+                      prevPart.toolCallId === part.toolCallId
+                    ) {
+                      return null;
+                    }
+                  }
+
+                  // Hide tool calls if hideToolCalls is true
+                  if (
+                    hideToolCalls &&
+                    isToolPart(part) &&
+                    (part.type?.startsWith("tool-") ||
+                      part.type === "dynamic-tool")
                   ) {
                     return null;
                   }
-                }
 
-                // Hide tool calls if hideToolCalls is true
-                if (
-                  hideToolCalls &&
-                  isToolPart(part) &&
-                  (part.type?.startsWith("tool-") ||
-                    part.type === "dynamic-tool")
-                ) {
-                  return null;
-                }
+                  const isLastTextPart = i === lastTextPartIndex;
 
-                switch (part.type) {
-                  case "text":
-                    return (
-                      <Fragment key={`${message.id}-${i}`}>
-                        <Message from={message.role}>
-                          <MessageContent>
-                            {message.role === "system" && (
-                              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                System Prompt
-                              </div>
-                            )}
-                            <Response>{part.text}</Response>
-                          </MessageContent>
-                        </Message>
-                      </Fragment>
-                    );
+                  switch (part.type) {
+                    case "text":
+                      // Hide intermediate text parts when hideToolCalls is true
+                      if (shouldHideTextPart(i)) {
+                        return null;
+                      }
 
-                  case "reasoning":
-                    return (
-                      <Reasoning key={`${message.id}-${i}`} className="w-full">
-                        <ReasoningTrigger />
-                        <ReasoningContent>{part.text}</ReasoningContent>
-                      </Reasoning>
-                    );
+                      return (
+                        <Fragment key={`${message.id}-${i}`}>
+                          <Message from={message.role}>
+                            <MessageContent>
+                              {message.role === "system" && (
+                                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                  System Prompt
+                                </div>
+                              )}
+                              <Response>{part.text}</Response>
+                              {isLastTextPart &&
+                                hideToolCalls &&
+                                toolParts.length > 0 && (
+                                  <ToolActivity tools={toolParts} />
+                                )}
+                            </MessageContent>
+                          </Message>
+                        </Fragment>
+                      );
 
-                  case "dynamic-tool": {
-                    if (!isToolPart(part)) return null;
-                    const toolName = part.toolName;
+                    case "reasoning":
+                      return (
+                        <Reasoning
+                          key={`${message.id}-${i}`}
+                          className="w-full"
+                        >
+                          <ReasoningTrigger />
+                          <ReasoningContent>{part.text}</ReasoningContent>
+                        </Reasoning>
+                      );
 
-                    // Look ahead for tool result (same tool call ID)
-                    let toolResultPart = null;
-                    const nextPart = message.parts[i + 1];
-                    if (
-                      nextPart &&
-                      isToolPart(nextPart) &&
-                      nextPart.type === "dynamic-tool" &&
-                      nextPart.state === "output-available" &&
-                      nextPart.toolCallId === part.toolCallId
-                    ) {
-                      toolResultPart = nextPart;
-                    }
-
-                    return (
-                      <MessageTool
-                        part={part}
-                        key={`${message.id}-${i}`}
-                        toolResultPart={toolResultPart}
-                        toolName={toolName}
-                      />
-                    );
-                  }
-
-                  default: {
-                    // Handle tool invocations (type is "tool-{toolName}")
-                    if (isToolPart(part) && part.type?.startsWith("tool-")) {
-                      const toolName = part.type.replace("tool-", "");
+                    case "dynamic-tool": {
+                      if (!isToolPart(part)) return null;
+                      const toolName = part.toolName;
 
                       // Look ahead for tool result (same tool call ID)
-                      // biome-ignore lint/suspicious/noExplicitAny: Tool result structure varies by tool type
-                      let toolResultPart: any = null;
+                      let toolResultPart = null;
                       const nextPart = message.parts[i + 1];
                       if (
                         nextPart &&
                         isToolPart(nextPart) &&
-                        nextPart.type?.startsWith("tool-") &&
+                        nextPart.type === "dynamic-tool" &&
                         nextPart.state === "output-available" &&
                         nextPart.toolCallId === part.toolCallId
                       ) {
@@ -177,13 +290,43 @@ export function ChatMessages({
                       );
                     }
 
-                    // Skip step-start and other non-renderable parts
-                    return null;
+                    default: {
+                      // Handle tool invocations (type is "tool-{toolName}")
+                      if (isToolPart(part) && part.type?.startsWith("tool-")) {
+                        const toolName = part.type.replace("tool-", "");
+
+                        // Look ahead for tool result (same tool call ID)
+                        // biome-ignore lint/suspicious/noExplicitAny: Tool result structure varies by tool type
+                        let toolResultPart: any = null;
+                        const nextPart = message.parts[i + 1];
+                        if (
+                          nextPart &&
+                          isToolPart(nextPart) &&
+                          nextPart.type?.startsWith("tool-") &&
+                          nextPart.state === "output-available" &&
+                          nextPart.toolCallId === part.toolCallId
+                        ) {
+                          toolResultPart = nextPart;
+                        }
+
+                        return (
+                          <MessageTool
+                            part={part}
+                            key={`${message.id}-${i}`}
+                            toolResultPart={toolResultPart}
+                            toolName={toolName}
+                          />
+                        );
+                      }
+
+                      // Skip step-start and other non-renderable parts
+                      return null;
+                    }
                   }
-                }
-              })}
-            </div>
-          ))}
+                })}
+              </div>
+            );
+          })}
           {(status === "submitted" ||
             (status === "streaming" && isStreamingStalled)) && (
             <Message from="assistant">
