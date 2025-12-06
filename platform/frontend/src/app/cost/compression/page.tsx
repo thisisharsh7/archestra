@@ -3,7 +3,6 @@
 import { archestraApiSdk } from "@shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -136,9 +135,8 @@ export default function CompressionPage() {
       }
 
       setHasChanges(false);
-      toast.success("Tool results compression settings updated");
     } catch (_error) {
-      toast.error("Failed to update tool results compression settings");
+      // Error toast is already handled by the mutation
     }
   };
 

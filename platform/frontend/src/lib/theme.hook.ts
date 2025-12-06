@@ -86,6 +86,20 @@ export function useOrgTheme() {
     [applyFontOnBackend],
   );
 
+  const saveBoth = useCallback(
+    (themeId: OrganizationTheme, fontId: OrganizationCustomFont) => {
+      setCurrentUITheme(themeId);
+      setCurrentUIFont(fontId);
+      updateThemeMutation.mutate({
+        theme: themeId,
+        customFont: fontId,
+      });
+      applyThemeInLocalStorage(themeId);
+      applyFontInLocalStorage(fontId);
+    },
+    [updateThemeMutation],
+  );
+
   // whenever currentUITheme changes, apply the theme on the UI
   useEffect(() => {
     applyThemeOnUI(currentUITheme);
@@ -124,6 +138,7 @@ export function useOrgTheme() {
     setPreviewFont: setCurrentUIFont,
     saveTheme,
     saveFont,
+    saveBoth,
     logo,
     DEFAULT_THEME,
     DEFAULT_FONT,
