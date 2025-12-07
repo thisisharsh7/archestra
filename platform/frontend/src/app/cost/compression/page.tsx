@@ -98,46 +98,42 @@ export default function CompressionPage() {
   };
 
   const handleSave = async () => {
-    try {
-      // Update organization based on selected mode
-      if (compressionMode === "disabled") {
-        await updateOrganizationMutation.mutateAsync({
-          compressionScope: "organization",
-          convertToolResultsToToon: false,
-        });
-      } else if (compressionMode === "organization") {
-        await updateOrganizationMutation.mutateAsync({
-          compressionScope: "organization",
-          convertToolResultsToToon: true,
-        });
-      } else {
-        // Team mode
-        await updateOrganizationMutation.mutateAsync({
-          compressionScope: "team",
-          convertToolResultsToToon: false, // Not used in team mode
-        });
+    // Update organization based on selected mode
+    if (compressionMode === "disabled") {
+      await updateOrganizationMutation.mutateAsync({
+        compressionScope: "organization",
+        convertToolResultsToToon: false,
+      });
+    } else if (compressionMode === "organization") {
+      await updateOrganizationMutation.mutateAsync({
+        compressionScope: "organization",
+        convertToolResultsToToon: true,
+      });
+    } else {
+      // Team mode
+      await updateOrganizationMutation.mutateAsync({
+        compressionScope: "team",
+        convertToolResultsToToon: false, // Not used in team mode
+      });
 
-        // Update team compression settings
-        await Promise.all(
-          teams.map((team) =>
-            archestraApiSdk.updateTeam({
-              path: { id: team.id },
-              body: {
-                name: team.name,
-                description: team.description ?? undefined,
-                convertToolResultsToToon: selectedTeamIds.includes(team.id),
-              },
-            }),
-          ),
-        );
-        // Invalidate teams query to refresh data
-        queryClient.invalidateQueries({ queryKey: ["teams"] });
-      }
-
-      setHasChanges(false);
-    } catch (_error) {
-      // Error toast is already handled by the mutation
+      // Update team compression settings
+      await Promise.all(
+        teams.map((team) =>
+          archestraApiSdk.updateTeam({
+            path: { id: team.id },
+            body: {
+              name: team.name,
+              description: team.description ?? undefined,
+              convertToolResultsToToon: selectedTeamIds.includes(team.id),
+            },
+          }),
+        ),
+      );
+      // Invalidate teams query to refresh data
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
     }
+
+    setHasChanges(false);
   };
 
   const handleCancel = () => {
