@@ -116,6 +116,7 @@ export function useAssignTool() {
     onSuccess: (_, { agentId }) => {
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ["agents", agentId, "tools"] });
+      queryClient.invalidateQueries({ queryKey: ["agents"] });
       queryClient.invalidateQueries({ queryKey: ["tools"] });
       queryClient.invalidateQueries({ queryKey: ["tools", "unassigned"] });
       queryClient.invalidateQueries({ queryKey: ["agent-tools"] });
@@ -171,6 +172,7 @@ export function useBulkAssignTools() {
       queryClient.invalidateQueries({ queryKey: ["tools"], exact: true });
       queryClient.invalidateQueries({ queryKey: ["tools", "unassigned"] });
       queryClient.invalidateQueries({ queryKey: ["agent-tools"] });
+      queryClient.invalidateQueries({ queryKey: ["agents"] });
 
       // Invalidate the MCP servers list
       queryClient.invalidateQueries({
@@ -206,6 +208,7 @@ export function useUnassignTool() {
     },
     onSuccess: (_, { agentId }) => {
       queryClient.invalidateQueries({ queryKey: ["agents", agentId, "tools"] });
+      queryClient.invalidateQueries({ queryKey: ["agents"] });
       queryClient.invalidateQueries({ queryKey: ["tools"] });
       queryClient.invalidateQueries({ queryKey: ["tools", "unassigned"] });
       queryClient.invalidateQueries({ queryKey: ["agent-tools"] });
@@ -238,6 +241,7 @@ export function useProfileToolPatchMutation() {
       queryClient.invalidateQueries({
         queryKey: ["agent-tools"],
       });
+      queryClient.invalidateQueries({ queryKey: ["agents"] });
     },
   });
 }
@@ -256,6 +260,7 @@ export function useBulkUpdateProfileTools() {
       queryClient.invalidateQueries({
         queryKey: ["agent-tools"],
       });
+      queryClient.invalidateQueries({ queryKey: ["agents"] });
     },
   });
 }
