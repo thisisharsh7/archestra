@@ -12,7 +12,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { InstallationSelect } from "@/components/installation-select";
-import { TokenSelect } from "@/components/token-select";
+import {
+  DYNAMIC_CREDENTIAL_VALUE,
+  TokenSelect,
+} from "@/components/token-select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -65,6 +68,7 @@ export function AssignToolsDialog({
       credentialsSourceId?: string;
       executionSourceId?: string;
       agentToolId?: string;
+      useDynamicTeamCredential?: boolean;
     }[]
   >([]);
 
@@ -126,6 +130,7 @@ export function AssignToolsDialog({
           credentialsSourceId: at.credentialSourceMcpServerId || undefined,
           executionSourceId: at.executionSourceMcpServerId || undefined,
           agentToolId: at.id,
+          useDynamicTeamCredential: at.useDynamicTeamCredential || false,
         })),
       );
     }
@@ -167,9 +172,18 @@ export function AssignToolsDialog({
 
   const handleCredentialsSourceChange = useCallback(
     (toolId: string, credentialsSourceId?: string) => {
+      const isDynamic = credentialsSourceId === DYNAMIC_CREDENTIAL_VALUE;
       setSelectedTools((prev) => {
         return prev.map((tool) =>
-          tool.toolId === toolId ? { ...tool, credentialsSourceId } : tool,
+          tool.toolId === toolId
+            ? {
+                ...tool,
+                credentialsSourceId: isDynamic
+                  ? undefined
+                  : credentialsSourceId,
+                useDynamicTeamCredential: isDynamic,
+              }
+            : tool,
         );
       });
     },
@@ -178,9 +192,16 @@ export function AssignToolsDialog({
 
   const handleExecutionSourceChange = useCallback(
     (toolId: string, executionSourceId?: string) => {
+      const isDynamic = executionSourceId === DYNAMIC_CREDENTIAL_VALUE;
       setSelectedTools((prev) => {
         return prev.map((tool) =>
-          tool.toolId === toolId ? { ...tool, executionSourceId } : tool,
+          tool.toolId === toolId
+            ? {
+                ...tool,
+                executionSourceId: isDynamic ? undefined : executionSourceId,
+                useDynamicTeamCredential: isDynamic,
+              }
+            : tool,
         );
       });
     },
@@ -192,6 +213,8 @@ export function AssignToolsDialog({
     (credentialId: string | null) => {
       if (!credentialId || originFilter === "all") return;
 
+      const isDynamic = credentialId === DYNAMIC_CREDENTIAL_VALUE;
+
       // Get all visible tool IDs (filtered by current origin and search)
       const visibleToolIds = new Set(filteredTools.map((t) => t.id));
 
@@ -201,9 +224,17 @@ export function AssignToolsDialog({
           if (!visibleToolIds.has(tool.toolId)) return tool;
 
           if (isLocalServerForBulk) {
-            return { ...tool, executionSourceId: credentialId };
+            return {
+              ...tool,
+              executionSourceId: isDynamic ? undefined : credentialId,
+              useDynamicTeamCredential: isDynamic,
+            };
           }
-          return { ...tool, credentialsSourceId: credentialId };
+          return {
+            ...tool,
+            credentialsSourceId: isDynamic ? undefined : credentialId,
+            useDynamicTeamCredential: isDynamic,
+          };
         });
 
         // Also add any visible tools that aren't yet selected
@@ -212,10 +243,11 @@ export function AssignToolsDialog({
           .filter((t) => !selectedToolIds.has(t.id))
           .map((t) => ({
             toolId: t.id,
-            credentialsSourceId: isLocalServerForBulk
-              ? undefined
-              : credentialId,
-            executionSourceId: isLocalServerForBulk ? credentialId : undefined,
+            credentialsSourceId:
+              isLocalServerForBulk || isDynamic ? undefined : credentialId,
+            executionSourceId:
+              isLocalServerForBulk && !isDynamic ? credentialId : undefined,
+            useDynamicTeamCredential: isDynamic,
           }));
 
         return [...updated, ...newTools];
@@ -246,7 +278,9 @@ export function AssignToolsDialog({
         (current.credentialSourceMcpServerId !==
           (tool.credentialsSourceId || null) ||
           current.executionSourceMcpServerId !==
-            (tool.executionSourceId || null))
+            (tool.executionSourceId || null) ||
+          current.useDynamicTeamCredential !==
+            (tool.useDynamicTeamCredential || false))
       );
     });
 
@@ -258,6 +292,7 @@ export function AssignToolsDialog({
           toolId: tool.toolId,
           credentialSourceMcpServerId: tool.credentialsSourceId || null,
           executionSourceMcpServerId: tool.executionSourceId || null,
+          useDynamicTeamCredential: tool.useDynamicTeamCredential || false,
         });
       }
 
@@ -276,6 +311,7 @@ export function AssignToolsDialog({
             id: tool.agentToolId,
             credentialSourceMcpServerId: tool.credentialsSourceId || null,
             executionSourceMcpServerId: tool.executionSourceId || null,
+            useDynamicTeamCredential: tool.useDynamicTeamCredential || false,
           });
         }
       }
@@ -427,6 +463,14 @@ export function AssignToolsDialog({
                             (t) => t.toolId === tool.id,
                           );
 
+                          // Determine value to show - use dynamic constant if useDynamicTeamCredential is true
+                          const displayValue =
+                            selectedTool?.useDynamicTeamCredential
+                              ? DYNAMIC_CREDENTIAL_VALUE
+                              : isLocalServer
+                                ? selectedTool?.executionSourceId
+                                : selectedTool?.credentialsSourceId;
+
                           return (
                             <div className="flex flex-col gap-1 mt-4">
                               {isLocalServer ? (
@@ -442,10 +486,7 @@ export function AssignToolsDialog({
                                         executionSourceId ?? undefined,
                                       )
                                     }
-                                    value={
-                                      selectedTool?.executionSourceId ??
-                                      undefined
-                                    }
+                                    value={displayValue ?? undefined}
                                     className="mb-4"
                                     shouldSetDefaultValue
                                   />
@@ -463,10 +504,7 @@ export function AssignToolsDialog({
                                         credentialsSourceId ?? undefined,
                                       )
                                     }
-                                    value={
-                                      selectedTool?.credentialsSourceId ??
-                                      undefined
-                                    }
+                                    value={displayValue ?? undefined}
                                     className="mb-4"
                                     shouldSetDefaultValue
                                   />
@@ -535,6 +573,9 @@ export function AssignToolsDialog({
               isLoading ||
               isSaving ||
               selectedTools.some((tool) => {
+                // If using dynamic credential, it's valid
+                if (tool.useDynamicTeamCredential) return false;
+
                 const mcpTool = mcpTools.find((t) => t.id === tool.toolId);
                 const mcpCatalogItem = internalMcpCatalogItems?.find(
                   (item) => item.id === mcpTool?.catalogId,
