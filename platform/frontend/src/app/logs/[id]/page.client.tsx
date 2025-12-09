@@ -273,7 +273,10 @@ function LogDetail({
               </AccordionItem>
             )}
 
-            <AccordionItem value="response" className="border rounded-lg !border-b">
+            <AccordionItem
+              value="response"
+              className="border rounded-lg !border-b"
+            >
               <AccordionTrigger className="px-6 py-4 hover:no-underline">
                 <span className="text-base font-semibold">Raw Response</span>
               </AccordionTrigger>
