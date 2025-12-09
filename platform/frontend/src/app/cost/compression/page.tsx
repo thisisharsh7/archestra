@@ -3,6 +3,7 @@
 import { archestraApiSdk } from "@shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -117,20 +118,25 @@ export default function CompressionPage() {
       });
 
       // Update team compression settings
-      await Promise.all(
-        teams.map((team) =>
-          archestraApiSdk.updateTeam({
-            path: { id: team.id },
-            body: {
-              name: team.name,
-              description: team.description ?? undefined,
-              convertToolResultsToToon: selectedTeamIds.includes(team.id),
-            },
-          }),
-        ),
-      );
-      // Invalidate teams query to refresh data
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      try {
+        await Promise.all(
+          teams.map((team) =>
+            archestraApiSdk.updateTeam({
+              path: { id: team.id },
+              body: {
+                name: team.name,
+                description: team.description ?? undefined,
+                convertToolResultsToToon: selectedTeamIds.includes(team.id),
+              },
+            }),
+          ),
+        );
+        // Invalidate teams query to refresh data
+        queryClient.invalidateQueries({ queryKey: ["teams"] });
+      } catch (error) {
+        toast.error("Failed to update team compression settings");
+        throw error; // Re-throw to prevent setHasChanges(false) from running
+      }
     }
 
     setHasChanges(false);
