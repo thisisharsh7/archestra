@@ -105,8 +105,8 @@ function TokenPriceInlineForm({
     formData.pricePerMillionOutput;
 
   const handleSubmit = useCallback(
-    (e?: React.FormEvent) => {
-      e?.preventDefault();
+    (e: React.FormEvent) => {
+      e.preventDefault();
       if (isValid) {
         onSave(formData);
       }
@@ -114,101 +114,100 @@ function TokenPriceInlineForm({
     [formData, onSave, isValid],
   );
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handleSubmit();
-      }
-    },
-    [handleSubmit],
-  );
-
   return (
     <tr className="border-b bg-muted/30">
-      <td className="p-4">
-        <Select
-          value={formData.provider}
-          onValueChange={(value) =>
-            setFormData({
-              ...formData,
-              provider: value as Providers,
-              model: "", // Clear model when provider changes
-            })
-          }
-        >
-          <SelectTrigger id="provider" className="w-full">
-            <SelectValue placeholder="Select provider" />
-          </SelectTrigger>
-          <SelectContent>
-            {(Object.keys(providerDisplayNames) as Providers[]).map(
-              (provider) => (
-                <SelectItem key={provider} value={provider}>
-                  {providerDisplayNames[provider]}
-                </SelectItem>
-              ),
-            )}
-          </SelectContent>
-        </Select>
-      </td>
-      <td className="p-4">
-        <SearchableSelect
-          value={formData.model}
-          onValueChange={(value) => setFormData({ ...formData, model: value })}
-          placeholder="Select or type model"
-          items={modelOptions}
-          allowCustom
-          className="w-full"
-        />
-      </td>
-      <td className="p-4">
-        <Input
-          id="priceInput"
-          type="number"
-          step="0.01"
-          min="0"
-          value={formData.pricePerMillionInput}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              pricePerMillionInput: e.target.value,
-            })
-          }
-          onKeyDown={handleKeyDown}
-          placeholder="50.00"
-          required
-          className="w-full"
-        />
-      </td>
-      <td className="p-4">
-        <Input
-          id="priceOutput"
-          type="number"
-          step="0.01"
-          min="0"
-          value={formData.pricePerMillionOutput}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              pricePerMillionOutput: e.target.value,
-            })
-          }
-          onKeyDown={handleKeyDown}
-          placeholder="50.00"
-          required
-          className="w-full"
-        />
-      </td>
-      <td className="p-4">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Button type="submit" disabled={!isValid} size="sm">
-            <Save className="h-4 w-4 mr-1" />
-            Save
-          </Button>
-          <Button type="button" variant="outline" onClick={onCancel} size="sm">
-            <X className="h-4 w-4 mr-1" />
-            Cancel
-          </Button>
+      <td colSpan={5} className="p-0">
+        <form onSubmit={handleSubmit}>
+          <div className="flex">
+            <div className="p-4 flex-1">
+              <Select
+                value={formData.provider}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    provider: value as Providers,
+                    model: "", // Clear model when provider changes
+                  })
+                }
+              >
+                <SelectTrigger id="provider" className="w-full">
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(providerDisplayNames) as Providers[]).map(
+                    (provider) => (
+                      <SelectItem key={provider} value={provider}>
+                        {providerDisplayNames[provider]}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="p-4 flex-1">
+              <SearchableSelect
+                value={formData.model}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, model: value })
+                }
+                placeholder="Select or type model"
+                items={modelOptions}
+                allowCustom
+                className="w-full"
+              />
+            </div>
+            <div className="p-4 flex-1">
+              <Input
+                id="priceInput"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.pricePerMillionInput}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    pricePerMillionInput: e.target.value,
+                  })
+                }
+                placeholder="50.00"
+                required
+                className="w-full"
+              />
+            </div>
+            <div className="p-4 flex-1">
+              <Input
+                id="priceOutput"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.pricePerMillionOutput}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    pricePerMillionOutput: e.target.value,
+                  })
+                }
+                placeholder="50.00"
+                required
+                className="w-full"
+              />
+            </div>
+            <div className="p-4 flex gap-2">
+              <Button type="submit" disabled={!isValid} size="sm">
+                <Save className="h-4 w-4 mr-1" />
+                Save
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                size="sm"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Cancel
+              </Button>
+            </div>
+          </div>
         </form>
       </td>
     </tr>
