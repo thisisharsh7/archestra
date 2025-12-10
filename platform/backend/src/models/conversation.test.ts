@@ -361,4 +361,91 @@ describe("ConversationModel", () => {
       expect(conversation.messages).toHaveLength(0);
     }
   });
+
+  test("findById maps database UUID to message id in UIMessage", async ({
+    makeUser,
+    makeOrganization,
+    makeAgent,
+  }) => {
+    const user = await makeUser();
+    const org = await makeOrganization();
+    const agent = await makeAgent({ name: "UUID Mapping Agent", teams: [] });
+
+    const conversation = await ConversationModel.create({
+      userId: user.id,
+      organizationId: org.id,
+      agentId: agent.id,
+      title: "UUID Mapping Test",
+      selectedModel: "claude-3-haiku-20240307",
+    });
+
+    // Import MessageModel to create messages directly
+    const MessageModel = (await import("./message")).default;
+
+    // Create a message with empty id in content (simulating AI SDK behavior)
+    const message = await MessageModel.create({
+      conversationId: conversation.id,
+      role: "assistant",
+      content: { id: "", role: "assistant", parts: [{ type: "text", text: "Hello" }] },
+    });
+
+    // Find conversation with messages
+    const found = await ConversationModel.findById(conversation.id, user.id, org.id);
+
+    expect(found).toBeDefined();
+    expect(found?.messages).toHaveLength(1);
+    expect(found?.messages[0].id).toBe(message.id); // Should have database UUID, not empty string
+    expect(found?.messages[0].id).not.toBe(""); // Verify it's not empty
+    expect(found?.messages[0].parts[0].text).toBe("Hello");
+  });
+
+  test("findAll maps database UUID to message id in UIMessage", async ({
+    makeUser,
+    makeOrganization,
+    makeAgent,
+  }) => {
+    const user = await makeUser();
+    const org = await makeOrganization();
+    const agent = await makeAgent({ name: "UUID Mapping All Agent", teams: [] });
+
+    const conversation = await ConversationModel.create({
+      userId: user.id,
+      organizationId: org.id,
+      agentId: agent.id,
+      title: "UUID Mapping All Test",
+      selectedModel: "claude-3-haiku-20240307",
+    });
+
+    // Import MessageModel to create messages directly
+    const MessageModel = (await import("./message")).default;
+
+    // Create multiple messages with empty ids in content
+    const message1 = await MessageModel.create({
+      conversationId: conversation.id,
+      role: "user",
+      content: { id: "", role: "user", parts: [{ type: "text", text: "User message" }] },
+    });
+
+    const message2 = await MessageModel.create({
+      conversationId: conversation.id,
+      role: "assistant",
+      content: { id: "", role: "assistant", parts: [{ type: "text", text: "Assistant message" }] },
+    });
+
+    // Find all conversations
+    const conversations = await ConversationModel.findAll(user.id, org.id);
+
+    expect(conversations).toHaveLength(1);
+    expect(conversations[0].messages).toHaveLength(2);
+
+    // Verify first message has database UUID
+    expect(conversations[0].messages[0].id).toBe(message1.id);
+    expect(conversations[0].messages[0].id).not.toBe("");
+    expect(conversations[0].messages[0].parts[0].text).toBe("User message");
+
+    // Verify second message has database UUID
+    expect(conversations[0].messages[1].id).toBe(message2.id);
+    expect(conversations[0].messages[1].id).not.toBe("");
+    expect(conversations[0].messages[1].parts[0].text).toBe("Assistant message");
+  });
 });
