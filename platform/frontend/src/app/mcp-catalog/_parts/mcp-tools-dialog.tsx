@@ -2,7 +2,7 @@
 
 import { MCP_SERVER_TOOL_NAME_SEPARATOR } from "@shared";
 import { Search, UserPlus, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -90,6 +90,14 @@ export function McpToolsDialog({
 }: McpToolsDialogProps) {
   const [selectedToolIds, setSelectedToolIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Clear selections when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setSelectedToolIds([]);
+      setSearchQuery("");
+    }
+  }, [open]);
 
   const filteredTools = useMemo(() => {
     if (!searchQuery.trim()) return tools;

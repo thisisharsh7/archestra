@@ -148,7 +148,6 @@ export function McpServerCard({
   const [selectedToolForAssignment, setSelectedToolForAssignment] =
     useState<ToolForAssignment | null>(null);
   const [bulkAssignTools, setBulkAssignTools] = useState<SimpleTool[]>([]);
-  const [toolsDialogKey, setToolsDialogKey] = useState(0);
   const [uninstallingServer, setUninstallingServer] = useState<{
     id: string;
     name: string;
@@ -525,7 +524,6 @@ export function McpServerCard({
   const dialogs = (
     <>
       <McpToolsDialog
-        key={toolsDialogKey}
         open={isToolsDialogOpen}
         onOpenChange={(open) => {
           setIsToolsDialogOpen(open);
@@ -561,10 +559,6 @@ export function McpServerCard({
         onOpenChange={(open) => {
           if (!open) {
             setBulkAssignTools([]);
-            // Close the parent tools dialog as well
-            setIsToolsDialogOpen(false);
-            // Reset the tools dialog to clear selections
-            setToolsDialogKey((prev) => prev + 1);
           }
         }}
         catalogId={item.id}

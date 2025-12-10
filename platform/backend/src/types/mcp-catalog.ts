@@ -70,6 +70,7 @@ export const InsertInternalMcpCatalogSchema = createInsertSchema(
   schema.internalMcpCatalogTable,
 )
   .extend({
+    name: z.string().trim().min(1, "Name cannot be empty"),
     serverType: InternalMcpCatalogServerTypeSchema,
     authFields: z.array(AuthFieldSchema).nullable().optional(),
     userConfig: z
@@ -89,6 +90,7 @@ export const UpdateInternalMcpCatalogSchema = createUpdateSchema(
   schema.internalMcpCatalogTable,
 )
   .extend({
+    name: z.string().trim().min(1, "Name cannot be empty"),
     serverType: InternalMcpCatalogServerTypeSchema,
     authFields: z.array(AuthFieldSchema).nullable().optional(),
     userConfig: z
