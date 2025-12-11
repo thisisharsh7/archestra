@@ -386,11 +386,19 @@ describe("ConversationModel", () => {
     const message = await MessageModel.create({
       conversationId: conversation.id,
       role: "assistant",
-      content: { id: "", role: "assistant", parts: [{ type: "text", text: "Hello" }] },
+      content: {
+        id: "",
+        role: "assistant",
+        parts: [{ type: "text", text: "Hello" }],
+      },
     });
 
     // Find conversation with messages
-    const found = await ConversationModel.findById(conversation.id, user.id, org.id);
+    const found = await ConversationModel.findById(
+      conversation.id,
+      user.id,
+      org.id,
+    );
 
     expect(found).toBeDefined();
     expect(found?.messages).toHaveLength(1);
@@ -406,7 +414,10 @@ describe("ConversationModel", () => {
   }) => {
     const user = await makeUser();
     const org = await makeOrganization();
-    const agent = await makeAgent({ name: "UUID Mapping All Agent", teams: [] });
+    const agent = await makeAgent({
+      name: "UUID Mapping All Agent",
+      teams: [],
+    });
 
     const conversation = await ConversationModel.create({
       userId: user.id,
@@ -423,13 +434,21 @@ describe("ConversationModel", () => {
     const message1 = await MessageModel.create({
       conversationId: conversation.id,
       role: "user",
-      content: { id: "", role: "user", parts: [{ type: "text", text: "User message" }] },
+      content: {
+        id: "",
+        role: "user",
+        parts: [{ type: "text", text: "User message" }],
+      },
     });
 
     const message2 = await MessageModel.create({
       conversationId: conversation.id,
       role: "assistant",
-      content: { id: "", role: "assistant", parts: [{ type: "text", text: "Assistant message" }] },
+      content: {
+        id: "",
+        role: "assistant",
+        parts: [{ type: "text", text: "Assistant message" }],
+      },
     });
 
     // Find all conversations
@@ -446,6 +465,8 @@ describe("ConversationModel", () => {
     // Verify second message has database UUID
     expect(conversations[0].messages[1].id).toBe(message2.id);
     expect(conversations[0].messages[1].id).not.toBe("");
-    expect(conversations[0].messages[1].parts[0].text).toBe("Assistant message");
+    expect(conversations[0].messages[1].parts[0].text).toBe(
+      "Assistant message",
+    );
   });
 });
