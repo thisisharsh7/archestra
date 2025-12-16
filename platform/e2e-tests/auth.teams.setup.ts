@@ -219,12 +219,8 @@ setup("setup teams and assignments", async ({ page }) => {
   expect(editorMember, `Editor user ${EDITOR_EMAIL} not found`).toBeTruthy();
   expect(memberMember, `Member user ${MEMBER_EMAIL} not found`).toBeTruthy();
 
-  if (!editorMember || !memberMember) {
-    throw new Error("Required members not found after verification");
-  }
-
-  const editorUserId = editorMember.userId;
-  const memberUserId = memberMember.userId;
+  const editorUserId = editorMember?.userId ?? "";
+  const memberUserId = memberMember?.userId ?? "";
 
   // Get existing teams
   const existingTeams = await getTeams(page.request);

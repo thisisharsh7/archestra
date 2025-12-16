@@ -1,4 +1,8 @@
-import { ADMIN_ROLE_NAME, type PredefinedRoleName } from "@shared";
+import {
+  ADMIN_ROLE_NAME,
+  type PredefinedRoleName,
+  testMcpServerCommand,
+} from "@shared";
 import logger from "@/logging";
 import {
   AgentModel,
@@ -9,6 +13,7 @@ import {
   OrganizationModel,
   PromptModel,
   TeamModel,
+  TeamTokenModel,
   ToolModel,
   UserModel,
 } from "@/models";
@@ -463,22 +468,6 @@ async function seedTestMcpServer(): Promise<void> {
     return;
   }
 
-  // MCP server script using the SDK - installed at runtime
-  const mcpServerScript = `
-const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
-const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
-
-const server = new McpServer({ name: 'dev-test-server', version: '1.0.0' });
-
-server.tool('print_archestra_test', 'Prints the ARCHESTRA_TEST environment variable value', {}, async () => {
-  const value = process.env.ARCHESTRA_TEST || '(not set)';
-  return { content: [{ type: 'text', text: 'ARCHESTRA_TEST = ' + value }] };
-});
-
-const transport = new StdioServerTransport();
-server.connect(transport);
-`.trim();
-
   await InternalMcpCatalogModel.create({
     name: "internal-dev-test-server",
     description:
@@ -486,10 +475,7 @@ server.connect(transport);
     serverType: "local",
     localConfig: {
       command: "sh",
-      arguments: [
-        "-c",
-        `npm install --silent @modelcontextprotocol/sdk && node -e '${mcpServerScript.replace(/'/g, "'\"'\"'")}'`,
-      ],
+      arguments: ["-c", testMcpServerCommand],
       transportType: "stdio",
       environment: [
         {
@@ -505,6 +491,33 @@ server.connect(transport);
   logger.info("✓ Seeded test MCP server (internal-dev-test-server)");
 }
 
+/**
+ * Creates team tokens for existing teams and organization
+ * - Creates "Organization Token" if missing
+ * - Creates team tokens for each team if missing
+ */
+async function seedTeamTokens(): Promise<void> {
+  // Get the default organization
+  const org = await OrganizationModel.getOrCreateDefaultOrganization();
+
+  // Ensure organization token exists
+  const orgToken = await TeamTokenModel.ensureOrganizationToken();
+  logger.info(
+    { organizationId: org.id, tokenId: orgToken.id },
+    "Ensured organization token exists",
+  );
+
+  // Get all teams for this organization and ensure they have tokens
+  const teams = await TeamModel.findByOrganization(org.id);
+  for (const team of teams) {
+    const teamToken = await TeamTokenModel.ensureTeamToken(team.id, team.name);
+    logger.info(
+      { teamId: team.id, teamName: team.name, tokenId: teamToken.id },
+      "Ensured team token exists",
+    );
+  }
+}
+
 export async function seedRequiredStartingData(): Promise<void> {
   await seedDefaultUserAndOrg();
   await seedDualLlmConfig();
@@ -515,4 +528,5 @@ export async function seedRequiredStartingData(): Promise<void> {
   await seedDefaultRegularPrompts();
   await seedArchestraTools();
   await seedTestMcpServer();
+  await seedTeamTokens();
 }

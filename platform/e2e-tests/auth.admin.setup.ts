@@ -1,5 +1,8 @@
-import type { APIRequestContext } from "@playwright/test";
-import { expect, test as setup } from "@playwright/test";
+import {
+  type APIRequestContext,
+  expect,
+  test as setup,
+} from "@playwright/test";
 import {
   ADMIN_EMAIL,
   ADMIN_PASSWORD,

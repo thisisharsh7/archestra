@@ -12,6 +12,7 @@ const config: KnipConfig = {
     "auth.users.setup.ts",
   ],
   project: ["**/*.ts"],
+  ignore: ["auth.*.setup.ts"],
   ignoreDependencies: [
     // Workspace dependency - resolved by pnpm
     "@shared",
