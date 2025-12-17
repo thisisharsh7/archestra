@@ -1,13 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import {
-  type Action,
-  ADMIN_ROLE_NAME,
-  MEMBER_ROLE_NAME,
-  type PredefinedRoleName,
-  type Resource,
-} from "@shared";
+import type { Action, PredefinedRoleName, Resource } from "@shared";
 import {
   allAvailableActions,
   predefinedPermissionsMap,
@@ -44,21 +38,22 @@ function getResourceDescription(resource: Resource): string {
   return descriptions[resource] || "";
 }
 
-function getRoleDescription(roleName: string): string {
-  const descriptions: Record<string, string> = {
-    [ADMIN_ROLE_NAME]:
-      "Full administrative access to all organization resources",
-    [MEMBER_ROLE_NAME]:
-      "Standard user with limited access to organization resources",
-  };
-  return descriptions[roleName] || "";
+// Using Record<PredefinedRoleName, string> ensures TypeScript will error
+// if a new predefined role is added but description is missing
+const roleDescriptions: Record<PredefinedRoleName, string> = {
+  admin: "Full administrative access to all organization resources",
+  editor:
+    "Power user with full CRUD access to most resources but no admin privileges",
+  member: "Standard user with limited access to organization resources",
+};
+
+function getRoleDescription(roleName: PredefinedRoleName): string {
+  return roleDescriptions[roleName];
 }
 
 function generatePredefinedRolesTable(): string {
-  const roles: readonly PredefinedRoleName[] = [
-    ADMIN_ROLE_NAME,
-    MEMBER_ROLE_NAME,
-  ];
+  // Dynamically get all predefined roles from the permissions map
+  const roles = Object.keys(predefinedPermissionsMap) as PredefinedRoleName[];
 
   let table = "| Role | Description | Granted Permissions |\n";
   table += "|------|-------------|--------------------|\n";
@@ -115,15 +110,25 @@ function getActionDescription(action: Action): string {
   return actionDescriptions[action] || "";
 }
 
-function generateMarkdownContent(): string {
+/**
+ * Generate the frontmatter for the markdown file.
+ * @param lastUpdated - The date string for the lastUpdated field
+ */
+function generateFrontmatter(lastUpdated: string): string {
   return `---
 title: "Platform Access Control"
 category: Archestra Platform
 description: "Role-based access control (RBAC) system for managing user permissions in Archestra"
 order: 4
-lastUpdated: ${new Date().toISOString().split("T")[0]}
----
+lastUpdated: ${lastUpdated}
+---`;
+}
 
+/**
+ * Generate the markdown body content (everything after frontmatter).
+ */
+function generateMarkdownBody(): string {
+  return `
 <!--
 Check ../docs_writer_prompt.md before changing this file.
 
@@ -203,10 +208,53 @@ Use clear, descriptive names for custom roles that indicate their purpose (e.g.,
 `;
 }
 
+/**
+ * Extract the body content from a markdown file (everything after the frontmatter closing ---).
+ */
+function extractBodyFromMarkdown(content: string): string {
+  // Find the closing --- of frontmatter
+  const frontmatterEnd = content.indexOf("---", 4); // Skip the opening ---
+  if (frontmatterEnd === -1) return content;
+  return content.slice(frontmatterEnd + 3).trim();
+}
+
+/**
+ * Extract the lastUpdated value from existing frontmatter.
+ */
+function extractLastUpdatedFromMarkdown(content: string): string | null {
+  const match = content.match(/lastUpdated:\s*(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : null;
+}
+
+function generateMarkdownContent(existingContent: string | null): string {
+  const newBody = generateMarkdownBody();
+
+  // Determine the lastUpdated date
+  let lastUpdated: string;
+
+  if (existingContent) {
+    const existingBody = extractBodyFromMarkdown(existingContent);
+    const existingLastUpdated = extractLastUpdatedFromMarkdown(existingContent);
+
+    // Only update the date if the actual content changed
+    if (existingBody === newBody.trim() && existingLastUpdated) {
+      // Content unchanged, keep the existing date
+      lastUpdated = existingLastUpdated;
+    } else {
+      // Content changed, use today's date
+      lastUpdated = new Date().toISOString().split("T")[0];
+    }
+  } else {
+    // New file, use today's date
+    lastUpdated = new Date().toISOString().split("T")[0];
+  }
+
+  return `${generateFrontmatter(lastUpdated)}${newBody}`;
+}
+
 async function main() {
   logger.info("📄 Generating access control documentation...");
 
-  const markdownContent = generateMarkdownContent();
   const docsFilePath = path.join(
     __dirname,
     "../../../../docs/pages/platform-access-control.md",
@@ -217,6 +265,14 @@ async function main() {
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
   }
+
+  // Read existing content if file exists (to preserve lastUpdated if content unchanged)
+  let existingContent: string | null = null;
+  if (fs.existsSync(docsFilePath)) {
+    existingContent = fs.readFileSync(docsFilePath, "utf-8");
+  }
+
+  const markdownContent = generateMarkdownContent(existingContent);
 
   // Write the generated content
   fs.writeFileSync(docsFilePath, markdownContent);

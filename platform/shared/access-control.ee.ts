@@ -43,12 +43,12 @@ export const allAvailableActions: Record<Resource, Action[]> = {
   internalMcpCatalog: ["create", "read", "update", "delete"],
   mcpServer: ["create", "read", "update", "delete", "admin"],
   mcpServerInstallationRequest: ["create", "read", "update", "delete", "admin"],
-  team: ["create", "read", "update", "delete"],
+  team: ["create", "read", "update", "delete", "admin"],
   mcpToolCall: ["read"],
   conversation: ["create", "read", "update", "delete"],
   limit: ["create", "read", "update", "delete"],
   tokenPrice: ["create", "read", "update", "delete"],
-  chatSettings: ["read", "update"],
+  chatSettings: ["create", "read", "update", "delete"],
   prompt: ["create", "read", "update", "delete"],
   /**
    * Better-auth access control resource - needed for organization role management
@@ -76,7 +76,7 @@ export const editorPermissions: Permissions = {
   conversation: ["create", "read", "update", "delete"],
   limit: ["create", "read", "update", "delete"],
   tokenPrice: ["create", "read", "update", "delete"],
-  chatSettings: ["read", "update"],
+  chatSettings: ["create", "read", "update", "delete"],
   prompt: ["create", "read", "update", "delete"],
 };
 
@@ -200,6 +200,9 @@ export const requiredEndpointPermissionsMap: Partial<
   [RouteId.GetUniqueExternalAgentIds]: {
     interaction: ["read"],
   },
+  [RouteId.GetUniqueUserIds]: {
+    interaction: ["read"],
+  },
   [RouteId.GetOperators]: {
     policy: ["read"],
   },
@@ -272,6 +275,9 @@ export const requiredEndpointPermissionsMap: Partial<
   [RouteId.DeleteInternalMcpCatalogItem]: {
     internalMcpCatalog: ["delete"],
   },
+  [RouteId.DeleteInternalMcpCatalogItemByName]: {
+    internalMcpCatalog: ["delete"],
+  },
   [RouteId.GetMcpServers]: {
     mcpServer: ["read"],
   },
@@ -342,23 +348,23 @@ export const requiredEndpointPermissionsMap: Partial<
     team: ["read"],
   },
   [RouteId.AddTeamMember]: {
-    team: ["update"],
+    team: ["admin"],
   },
   [RouteId.RemoveTeamMember]: {
-    team: ["update"],
+    team: ["admin"],
   },
-  // Team External Group Routes (SSO Team Sync) - requires team update permission
+  // Team External Group Routes (SSO Team Sync) - requires team admin permission
   [RouteId.GetTeamExternalGroups]: {
     team: ["read"],
   },
   [RouteId.AddTeamExternalGroup]: {
-    team: ["update"],
+    team: ["admin"],
   },
   [RouteId.RemoveTeamExternalGroup]: {
-    team: ["update"],
+    team: ["admin"],
   },
   // Team Vault Folder Routes (BYOS - Bring Your Own Secrets)
-  // Note: Additional team admin check is done in route handlers
+  // Note: Route handlers check team membership for non-admin users
   [RouteId.GetTeamVaultFolder]: {
     team: ["read"],
   },
@@ -425,10 +431,31 @@ export const requiredEndpointPermissionsMap: Partial<
   [RouteId.GetChatMcpTools]: {
     conversation: ["read"],
   },
-  [RouteId.GetChatSettings]: {
+  [RouteId.GetChatApiKeys]: {
     chatSettings: ["read"],
   },
-  [RouteId.UpdateChatSettings]: {
+  [RouteId.CreateChatApiKey]: {
+    chatSettings: ["create"],
+  },
+  [RouteId.GetChatApiKey]: {
+    chatSettings: ["read"],
+  },
+  [RouteId.UpdateChatApiKey]: {
+    chatSettings: ["update"],
+  },
+  [RouteId.DeleteChatApiKey]: {
+    chatSettings: ["delete"],
+  },
+  [RouteId.SetChatApiKeyDefault]: {
+    chatSettings: ["update"],
+  },
+  [RouteId.UnsetChatApiKeyDefault]: {
+    chatSettings: ["update"],
+  },
+  [RouteId.UpdateChatApiKeyProfiles]: {
+    chatSettings: ["update"],
+  },
+  [RouteId.BulkAssignChatApiKeysToProfiles]: {
     chatSettings: ["update"],
   },
   [RouteId.GetPrompts]: {
@@ -563,6 +590,12 @@ export const requiredEndpointPermissionsMap: Partial<
   },
   [RouteId.CheckSecretsConnectivity]: {
     organization: ["update"],
+  },
+  [RouteId.InitializeSecretsManager]: {
+    organization: ["update"],
+  },
+  [RouteId.GetSecret]: {
+    organization: ["read"],
   },
 };
 

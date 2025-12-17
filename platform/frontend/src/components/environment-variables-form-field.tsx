@@ -1,7 +1,8 @@
 "use client";
 
+import { E2eTestId } from "@shared";
 import { CheckCircle2, Key, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { lazy, useEffect, useState } from "react";
 import type {
   Control,
   FieldArrayWithId,
@@ -13,7 +14,7 @@ import type {
   UseFormSetValue,
   UseFormWatch,
 } from "react-hook-form";
-import { ExternalSecretSelector } from "@/components/external-secret-selector";
+import { parseVaultReference } from "@/app/mcp-catalog/_parts/mcp-catalog-form.utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -41,6 +42,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
+const ExternalSecretSelector = lazy(
+  () =>
+    // biome-ignore lint/style/noRestrictedImports: lazy loading
+    import("@/components/external-secret-selector.ee"),
+);
 
 interface ExternalSecretValue {
   teamId: string | null;
@@ -83,14 +90,8 @@ export function EnvironmentVariablesFormField<
   const [dialogOpenForEnvIndex, setDialogOpenForEnvIndex] = useState<
     number | null
   >(null);
-  const [externalSecrets, setExternalSecrets] = useState<
-    Record<number, ExternalSecretValue>
-  >({});
 
   const handleSecretConfirm = (index: number, value: ExternalSecretValue) => {
-    // Save the external secret selection
-    setExternalSecrets((prev) => ({ ...prev, [index]: value }));
-
     // Store the value in the form field as path#key format
     if (value.secretPath && value.secretKey) {
       form.setValue(
@@ -101,7 +102,6 @@ export function EnvironmentVariablesFormField<
         >,
       );
     }
-
     setDialogOpenForEnvIndex(null);
   };
 
@@ -194,11 +194,23 @@ export function EnvironmentVariablesFormField<
                   render={({ field }) => (
                     <FormItem>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(newType) => {
+                          field.onChange(newType);
+                          // Clear value when type changes
+                          form.setValue(
+                            `${fieldNamePrefix}.${index}.value` as FieldPath<TFieldValues>,
+                            // biome-ignore lint/suspicious/noExplicitAny: Generic field types require any for setValue
+                            "" as any,
+                          );
+                        }}
                         value={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger
+                            data-testid={
+                              E2eTestId.SelectEnvironmentVariableType
+                            }
+                          >
                             <SelectValue placeholder="Type" />
                           </SelectTrigger>
                         </FormControl>
@@ -223,6 +235,7 @@ export function EnvironmentVariablesFormField<
                       <FormControl>
                         <div className="flex items-center h-10">
                           <Checkbox
+                            data-testid={E2eTestId.PromptOnInstallationCheckbox}
                             checked={field.value}
                             onCheckedChange={(checked) => {
                               field.onChange(checked);
@@ -280,13 +293,13 @@ export function EnvironmentVariablesFormField<
 
                   // If using external secrets manager and this is a secret type, show Set secret button
                   if (useExternalSecretsManager && envType === "secret") {
-                    const savedSecret = externalSecrets[index];
-                    const hasSecret =
-                      savedSecret?.secretPath && savedSecret?.secretKey;
+                    const formValue = form.watch(
+                      `${fieldNamePrefix}.${index}.value` as FieldPath<TFieldValues>,
+                    ) as string | undefined;
 
                     return (
                       <div className="flex items-center h-10">
-                        {hasSecret ? (
+                        {formValue ? (
                           <Button
                             type="button"
                             variant="ghost"
@@ -296,7 +309,7 @@ export function EnvironmentVariablesFormField<
                           >
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             <span className="truncate max-w-[120px]">
-                              {savedSecret.secretKey}
+                              {parseVaultReference(formValue).key}
                             </span>
                           </Button>
                         ) : (
@@ -323,7 +336,7 @@ export function EnvironmentVariablesFormField<
                         `${fieldNamePrefix}.${index}.value` as FieldPath<TFieldValues>
                       }
                       render={({ field }) => {
-                        // Boolean type: render checkbox with label
+                        // Boolean type: render checkbox
                         if (envType === "boolean") {
                           // Normalize empty/undefined values to "false"
                           const normalizedValue =
@@ -335,18 +348,13 @@ export function EnvironmentVariablesFormField<
                           return (
                             <FormItem>
                               <FormControl>
-                                <div className="flex items-center gap-2 h-10">
+                                <div className="flex items-center h-10">
                                   <Checkbox
                                     checked={normalizedValue === "true"}
                                     onCheckedChange={(checked) =>
                                       field.onChange(checked ? "true" : "false")
                                     }
                                   />
-                                  <span className="text-sm">
-                                    {normalizedValue === "true"
-                                      ? "True"
-                                      : "False"}
-                                  </span>
                                 </div>
                               </FormControl>
                               <FormMessage />
@@ -429,7 +437,20 @@ export function EnvironmentVariablesFormField<
         envKey={dialogEnvKey as string}
         initialValue={
           dialogOpenForEnvIndex !== null
-            ? externalSecrets[dialogOpenForEnvIndex]
+            ? (() => {
+                const formValue = form.watch(
+                  `${fieldNamePrefix}.${dialogOpenForEnvIndex}.value` as FieldPath<TFieldValues>,
+                ) as string | undefined;
+                if (formValue) {
+                  const parsed = parseVaultReference(formValue as string);
+                  return {
+                    teamId: null,
+                    secretPath: parsed.path,
+                    secretKey: parsed.key,
+                  };
+                }
+                return undefined;
+              })()
             : undefined
         }
         onConfirm={(value) =>
@@ -467,13 +488,18 @@ function ExternalSecretDialog({
     initialValue?.secretKey ?? null,
   );
 
-  // Reset state when dialog opens with new initial value
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
+  // Reset state when dialog opens or initialValue changes
+  useEffect(() => {
+    if (isOpen) {
       setTeamId(initialValue?.teamId ?? null);
       setSecretPath(initialValue?.secretPath ?? null);
       setSecretKey(initialValue?.secretKey ?? null);
-    } else {
+    }
+  }, [isOpen, initialValue]);
+
+  // Handle dialog open/close
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
       onClose();
     }
   };

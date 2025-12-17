@@ -1,5 +1,6 @@
 "use client";
 
+import { E2eTestId } from "@shared";
 import { useEffect, useMemo, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -151,6 +152,7 @@ export function SelectMcpServerCredentialTypeAndTeams({
               value={CredentialType.Personal}
               id="r1"
               disabled={isPersonalDisabled}
+              data-testid={E2eTestId.SelectCredentialTypePersonal}
             />
             <Label
               htmlFor="r1"
@@ -163,7 +165,7 @@ export function SelectMcpServerCredentialTypeAndTeams({
               {isPersonalDisabled && (
                 <span className="text-xs text-muted-foreground">
                   {byosEnabled
-                    ? "(not available when BYOS is enabled)"
+                    ? "(not available when Readonly Vault is enabled)"
                     : "(already created for this MCP server)"}
                 </span>
               )}
@@ -174,6 +176,7 @@ export function SelectMcpServerCredentialTypeAndTeams({
               value={CredentialType.Team}
               id="r2"
               disabled={isTeamDisabled}
+              data-testid={E2eTestId.SelectCredentialTypeTeam}
             />
             <Label
               htmlFor="r2"
@@ -212,7 +215,9 @@ export function SelectMcpServerCredentialTypeAndTeams({
                 }
               />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent
+              data-testid={E2eTestId.SelectCredentialTypeTeamDropdown}
+            >
               {availableTeams?.map((team) => (
                 <SelectItem key={team.id} value={team.id}>
                   {team.name}

@@ -28,7 +28,10 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      return reply.send(await InternalMcpCatalogModel.findAll());
+      // Don't expand secrets for list view
+      return reply.send(
+        await InternalMcpCatalogModel.findAll({ expandSecrets: false }),
+      );
     },
   );
 
@@ -69,14 +72,14 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
         if (!isByosEnabled()) {
           throw new ApiError(
             400,
-            "BYOS (Bring Your Own Secrets) is not enabled. " +
-              "Requires ARCHESTRA_SECRETS_MANAGER=BYOS_VAULT and an enterprise license.",
+            "Readonly Vault is not enabled. " +
+              "Requires ARCHESTRA_SECRETS_MANAGER=READONLY_VAULT and an enterprise license.",
           );
         }
 
         // Store as { client_secret: "path#key" } format
         const vaultReference = `${oauthClientSecretVaultPath}#${oauthClientSecretVaultKey}`;
-        const secret = await secretManager.createSecret(
+        const secret = await secretManager().createSecret(
           { client_secret: vaultReference },
           `${restBody.name}-oauth-client-secret-vault`,
         );
@@ -89,7 +92,7 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
         }
 
         logger.info(
-          "Created BYOS external vault secret reference for OAuth client secret",
+          "Created Readonly Vault external vault secret reference for OAuth client secret",
         );
       } else if (
         restBody.oauthConfig &&
@@ -97,7 +100,7 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
       ) {
         // Direct client_secret value
         const clientSecret = restBody.oauthConfig.client_secret;
-        const secret = await secretManager.createSecret(
+        const secret = await secretManager().createSecret(
           { client_secret: clientSecret },
           `${restBody.name}-oauth-client-secret`,
         );
@@ -107,21 +110,21 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
         delete restBody.oauthConfig.client_secret;
       }
 
-      // Handle local config secrets - either via BYOS or direct values
+      // Handle local config secrets - either via Readonly Vault or direct values
       if (localConfigVaultPath && localConfigVaultKey) {
-        // BYOS flow for local config secrets
+        // Readonly Vault flow for local config secrets
         if (!isByosEnabled()) {
           throw new ApiError(
             400,
-            "BYOS (Bring Your Own Secrets) is not enabled. " +
-              "Requires ARCHESTRA_SECRETS_MANAGER=BYOS_VAULT and an enterprise license.",
+            "Readonly Vault is not enabled. " +
+              "Requires ARCHESTRA_SECRETS_MANAGER=READONLY_VAULT and an enterprise license.",
           );
         }
 
         // Store as { vaultKey: "path#vaultKey" } format
         // The vault key becomes both the Archestra key and references itself in the vault
         const vaultReference = `${localConfigVaultPath}#${localConfigVaultKey}`;
-        const secret = await secretManager.createSecret(
+        const secret = await secretManager().createSecret(
           { [localConfigVaultKey]: vaultReference },
           `${restBody.name}-local-config-env-vault`,
         );
@@ -138,7 +141,7 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
         }
 
         logger.info(
-          "Created BYOS external vault secret reference for local config secrets",
+          "Created Readonly Vault external vault secret reference for local config secrets",
         );
       } else if (restBody.localConfig?.environment) {
         // Extract secret env vars from localConfig.environment
@@ -156,7 +159,7 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
 
         // Store secret env vars if any exist
         if (Object.keys(secretEnvVars).length > 0) {
-          const secret = await secretManager.createSecret(
+          const secret = await secretManager().createSecret(
             secretEnvVars,
             `${restBody.name}-local-config-env`,
           );
@@ -236,25 +239,25 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
       let clientSecretId = originalCatalogItem.clientSecretId;
       let localConfigSecretId = originalCatalogItem.localConfigSecretId;
 
-      // Handle OAuth client secret - either via BYOS or direct value
+      // Handle OAuth client secret - either via Readonly Vault or direct value
       if (oauthClientSecretVaultPath && oauthClientSecretVaultKey) {
-        // BYOS flow for OAuth client secret
+        // Readonly Vault flow for OAuth client secret
         if (!isByosEnabled()) {
           throw new ApiError(
             400,
-            "BYOS (Bring Your Own Secrets) is not enabled. " +
-              "Requires ARCHESTRA_SECRETS_MANAGER=BYOS_VAULT and an enterprise license.",
+            "Readonly Vault is not enabled. " +
+              "Requires ARCHESTRA_SECRETS_MANAGER=READONLY_VAULT and an enterprise license.",
           );
         }
 
         // Delete existing secret if any
         if (clientSecretId) {
-          await secretManager.deleteSecret(clientSecretId);
+          await secretManager().deleteSecret(clientSecretId);
         }
 
         // Store as { client_secret: "path#key" } format
         const vaultReference = `${oauthClientSecretVaultPath}#${oauthClientSecretVaultKey}`;
-        const secret = await secretManager.createSecret(
+        const secret = await secretManager().createSecret(
           { client_secret: vaultReference },
           `${originalCatalogItem.name}-oauth-client-secret-vault`,
         );
@@ -267,7 +270,7 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
         }
 
         logger.info(
-          "Created BYOS external vault secret reference for OAuth client secret",
+          "Created Readonly Vault external vault secret reference for OAuth client secret",
         );
       } else if (
         restBody.oauthConfig &&
@@ -277,12 +280,12 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
         const clientSecret = restBody.oauthConfig.client_secret;
         if (clientSecretId) {
           // Update existing secret
-          await secretManager.updateSecret(clientSecretId, {
+          await secretManager().updateSecret(clientSecretId, {
             client_secret: clientSecret,
           });
         } else {
           // Create new secret
-          const secret = await secretManager.createSecret(
+          const secret = await secretManager().createSecret(
             { client_secret: clientSecret },
             `${originalCatalogItem.name}-oauth-client-secret`,
           );
@@ -293,25 +296,25 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
         delete restBody.oauthConfig.client_secret;
       }
 
-      // Handle local config secrets - either via BYOS or direct values
+      // Handle local config secrets - either via Readonly Vault or direct values
       if (localConfigVaultPath && localConfigVaultKey) {
-        // BYOS flow for local config secrets
+        // Readonly Vault flow for local config secrets
         if (!isByosEnabled()) {
           throw new ApiError(
             400,
-            "BYOS (Bring Your Own Secrets) is not enabled. " +
-              "Requires ARCHESTRA_SECRETS_MANAGER=BYOS_VAULT and an enterprise license.",
+            "Readonly Vault is not enabled. " +
+              "Requires ARCHESTRA_SECRETS_MANAGER=READONLY_VAULT and an enterprise license.",
           );
         }
 
         // Delete existing secret if any
         if (localConfigSecretId) {
-          await secretManager.deleteSecret(localConfigSecretId);
+          await secretManager().deleteSecret(localConfigSecretId);
         }
 
         // Store as { vaultKey: "path#vaultKey" } format
         const vaultReference = `${localConfigVaultPath}#${localConfigVaultKey}`;
-        const secret = await secretManager.createSecret(
+        const secret = await secretManager().createSecret(
           { [localConfigVaultKey]: vaultReference },
           `${originalCatalogItem.name}-local-config-env-vault`,
         );
@@ -328,7 +331,7 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
         }
 
         logger.info(
-          "Created BYOS external vault secret reference for local config secrets",
+          "Created Readonly Vault external vault secret reference for local config secrets",
         );
       } else if (restBody.localConfig?.environment) {
         // Extract secret env vars from localConfig.environment
@@ -349,13 +352,13 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
         if (Object.keys(secretEnvVars).length > 0) {
           if (localConfigSecretId) {
             // Update existing secret
-            await secretManager.updateSecret(
+            await secretManager().updateSecret(
               localConfigSecretId,
               secretEnvVars,
             );
           } else {
             // Create new secret
-            const secret = await secretManager.createSecret(
+            const secret = await secretManager().createSecret(
               secretEnvVars,
               `${originalCatalogItem.name}-local-config-env`,
             );
@@ -404,21 +407,60 @@ const internalMcpCatalogRoutes: FastifyPluginAsyncZod = async (fastify) => {
       },
     },
     async ({ params: { id } }, reply) => {
-      // Get the catalog item to check if it has secrets
-      const catalogItem = await InternalMcpCatalogModel.findById(id);
+      // Get the catalog item to check if it has secrets - don't expand secrets, just need IDs
+      const catalogItem = await InternalMcpCatalogModel.findById(id, {
+        expandSecrets: false,
+      });
 
       if (catalogItem?.clientSecretId) {
         // Delete the associated OAuth secret
-        await secretManager.deleteSecret(catalogItem.clientSecretId);
+        await secretManager().deleteSecret(catalogItem.clientSecretId);
       }
 
       if (catalogItem?.localConfigSecretId) {
         // Delete the associated local config secret
-        await secretManager.deleteSecret(catalogItem.localConfigSecretId);
+        await secretManager().deleteSecret(catalogItem.localConfigSecretId);
       }
 
       return reply.send({
         success: await InternalMcpCatalogModel.delete(id),
+      });
+    },
+  );
+
+  fastify.delete(
+    "/api/internal_mcp_catalog/by-name/:name",
+    {
+      schema: {
+        operationId: RouteId.DeleteInternalMcpCatalogItemByName,
+        description: "Delete an Internal MCP catalog item by name",
+        tags: ["MCP Catalog"],
+        params: z.object({
+          name: z.string().min(1),
+        }),
+        response: constructResponseSchema(DeleteObjectResponseSchema),
+      },
+    },
+    async ({ params: { name } }, reply) => {
+      // Find the catalog item by name
+      const catalogItem = await InternalMcpCatalogModel.findByName(name);
+
+      if (!catalogItem) {
+        throw new ApiError(404, `Catalog item with name "${name}" not found`);
+      }
+
+      if (catalogItem?.clientSecretId) {
+        // Delete the associated OAuth secret
+        await secretManager().deleteSecret(catalogItem.clientSecretId);
+      }
+
+      if (catalogItem?.localConfigSecretId) {
+        // Delete the associated local config secret
+        await secretManager().deleteSecret(catalogItem.localConfigSecretId);
+      }
+
+      return reply.send({
+        success: await InternalMcpCatalogModel.delete(catalogItem.id),
       });
     },
   );
