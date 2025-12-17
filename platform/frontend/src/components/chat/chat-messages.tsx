@@ -1,4 +1,5 @@
 import type { UIMessage } from "@ai-sdk/react";
+import { archestraApiSdk } from "@shared";
 import type { ChatStatus, DynamicToolUIPart, ToolUIPart } from "ai";
 import Image from "next/image";
 import { Fragment, useEffect, useRef, useState } from "react";
@@ -21,12 +22,18 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ai-elements/tool";
+import { EditableAssistantMessage } from "./editable-assistant-message";
+import { EditableUserMessage } from "./editable-user-message";
+
+const { updateChatMessage } = archestraApiSdk;
 
 interface ChatMessagesProps {
   messages: UIMessage[];
   hideToolCalls?: boolean;
   status: ChatStatus;
   isLoadingConversation?: boolean;
+  onMessagesUpdate?: (messages: UIMessage[]) => void;
+  onUserMessageEdit?: (editedMessage: UIMessage, updatedMessages: UIMessage[]) => void;
 }
 
 // Type guards for tool parts
@@ -54,8 +61,97 @@ export function ChatMessages({
   hideToolCalls = false,
   status,
   isLoadingConversation = false,
+  onMessagesUpdate,
+  onUserMessageEdit,
 }: ChatMessagesProps) {
   const isStreamingStalled = useStreamingStallDetection(messages, status);
+  // Track editing by messageId-partIndex to support multiple text parts per message
+  const [editingPartKey, setEditingPartKey] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+
+  const handleStartEdit = (partKey: string, messageId?: string) => {
+    setEditingPartKey(partKey);
+    if (messageId) {
+      setEditingMessageId(messageId);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPartKey(null);
+    setEditingMessageId(null);
+  };
+
+  const handleSaveAssistantMessage = async (
+    messageId: string,
+    partIndex: number,
+    newText: string,
+  ) => {
+    try {
+      // Call the API to update the message (no subsequent deletion for assistant messages)
+      const { data, error } = await updateChatMessage({
+        path: { id: messageId },
+        body: { partIndex, text: newText },
+      });
+
+      if (error) {
+        console.error("Update message API error:", error);
+        const errorMessage =
+          (error as { error?: { message?: string } })?.error?.message ||
+          JSON.stringify(error);
+        throw new Error(`Failed to update message: ${errorMessage}`);
+      }
+
+      // Update local state to reflect the change immediately
+      if (onMessagesUpdate && data?.messages) {
+        onMessagesUpdate(data.messages as UIMessage[]);
+      }
+    } catch (error) {
+      console.error("Failed to update assistant message:", error);
+      throw error;
+    }
+  };
+
+  const handleSaveUserMessage = async (
+    messageId: string,
+    partIndex: number,
+    newText: string,
+  ) => {
+    try {
+      // Call the API to update the message and delete subsequent messages
+      const { data, error } = await updateChatMessage({
+        path: { id: messageId },
+        body: {
+          partIndex,
+          text: newText,
+          deleteSubsequentMessages: true,
+        },
+      });
+
+      if (error) {
+        console.error("Update message API error:", error);
+        const errorMessage =
+          (error as { error?: { message?: string } })?.error?.message ||
+          JSON.stringify(error);
+        throw new Error(`Failed to update message: ${errorMessage}`);
+      }
+
+      // Don't call onMessagesUpdate here - let onUserMessageEdit handle state
+      // to avoid race condition with old messages reappearing
+
+      // Find the edited message and trigger regeneration
+      if (onUserMessageEdit && data?.messages) {
+        const editedMessage = (data.messages as UIMessage[]).find(
+          (m) => m.id === messageId,
+        );
+        if (editedMessage) {
+          onUserMessageEdit(editedMessage, data.messages as UIMessage[]);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to update user message:", error);
+      throw error;
+    }
+  };
 
   if (messages.length === 0) {
     // Don't show "start conversation" message while loading - prevents flash of empty state
@@ -70,104 +166,132 @@ export function ChatMessages({
     );
   }
 
+  // Find the index of the message being edited
+  const editingMessageIndex = editingMessageId
+    ? messages.findIndex((m) => m.id === editingMessageId)
+    : -1;
+
   return (
     <Conversation className="h-full">
       <ConversationContent>
         <div className="max-w-4xl mx-auto">
-          {messages.map((message, idx) => (
-            <div key={message.id || idx}>
-              {message.parts.map((part, i) => {
-                // Skip tool result parts that immediately follow a tool invocation with same toolCallId
-                if (
-                  isToolPart(part) &&
-                  part.state === "output-available" &&
-                  i > 0
-                ) {
-                  const prevPart = message.parts[i - 1];
+          {messages.map((message, idx) => {
+            // Hide messages below the one being edited (for user messages only)
+            if (
+              editingMessageIndex !== -1 &&
+              idx > editingMessageIndex &&
+              editingPartKey?.startsWith(messages[editingMessageIndex].id)
+            ) {
+              return null;
+            }
+
+            return (
+              <div key={message.id || idx}>
+                {message.parts?.map((part, i) => {
+                  // Skip tool result parts that immediately follow a tool invocation with same toolCallId
                   if (
-                    isToolPart(prevPart) &&
-                    prevPart.state === "input-available" &&
-                    prevPart.toolCallId === part.toolCallId
+                    isToolPart(part) &&
+                    part.state === "output-available" &&
+                    i > 0
+                  ) {
+                    const prevPart = message.parts?.[i - 1];
+                    if (
+                      isToolPart(prevPart) &&
+                      prevPart.state === "input-available" &&
+                      prevPart.toolCallId === part.toolCallId
+                    ) {
+                      return null;
+                    }
+                  }
+
+                  // Hide tool calls if hideToolCalls is true
+                  if (
+                    hideToolCalls &&
+                    isToolPart(part) &&
+                    (part.type?.startsWith("tool-") ||
+                      part.type === "dynamic-tool")
                   ) {
                     return null;
                   }
-                }
 
-                // Hide tool calls if hideToolCalls is true
-                if (
-                  hideToolCalls &&
-                  isToolPart(part) &&
-                  (part.type?.startsWith("tool-") ||
-                    part.type === "dynamic-tool")
-                ) {
-                  return null;
-                }
+                  switch (part.type) {
+                    case "text": {
+                      const partKey = `${message.id}-${i}`;
 
-                switch (part.type) {
-                  case "text":
-                    return (
-                      <Fragment key={`${message.id}-${i}`}>
-                        <Message from={message.role}>
-                          <MessageContent>
-                            {message.role === "system" && (
-                              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                System Prompt
-                              </div>
-                            )}
-                            <Response>{part.text}</Response>
-                          </MessageContent>
-                        </Message>
-                      </Fragment>
-                    );
+                      // Use editable component for assistant messages
+                      if (message.role === "assistant") {
+                        return (
+                          <Fragment key={partKey}>
+                            <EditableAssistantMessage
+                              messageId={message.id}
+                              partIndex={i}
+                              partKey={partKey}
+                              text={part.text}
+                              isEditing={editingPartKey === partKey}
+                              onStartEdit={handleStartEdit}
+                              onCancelEdit={handleCancelEdit}
+                              onSave={handleSaveAssistantMessage}
+                            />
+                          </Fragment>
+                        );
+                      }
 
-                  case "reasoning":
-                    return (
-                      <Reasoning key={`${message.id}-${i}`} className="w-full">
-                        <ReasoningTrigger />
-                        <ReasoningContent>{part.text}</ReasoningContent>
-                      </Reasoning>
-                    );
+                      // Use editable component for user messages
+                      if (message.role === "user") {
+                        const hasMessagesBelow = idx < messages.length - 1;
+                        return (
+                          <Fragment key={partKey}>
+                            <EditableUserMessage
+                              messageId={message.id}
+                              partIndex={i}
+                              partKey={partKey}
+                              text={part.text}
+                              isEditing={editingPartKey === partKey}
+                              hasMessagesBelow={hasMessagesBelow}
+                              onStartEdit={handleStartEdit}
+                              onCancelEdit={handleCancelEdit}
+                              onSave={handleSaveUserMessage}
+                            />
+                          </Fragment>
+                        );
+                      }
 
-                  case "dynamic-tool": {
-                    if (!isToolPart(part)) return null;
-                    const toolName = part.toolName;
-
-                    // Look ahead for tool result (same tool call ID)
-                    let toolResultPart = null;
-                    const nextPart = message.parts[i + 1];
-                    if (
-                      nextPart &&
-                      isToolPart(nextPart) &&
-                      nextPart.type === "dynamic-tool" &&
-                      nextPart.state === "output-available" &&
-                      nextPart.toolCallId === part.toolCallId
-                    ) {
-                      toolResultPart = nextPart;
+                      // Regular rendering for system messages
+                      return (
+                        <Fragment key={`${message.id}-${i}`}>
+                          <Message from={message.role}>
+                            <MessageContent>
+                              {message.role === "system" && (
+                                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                  System Prompt
+                                </div>
+                              )}
+                              <Response>{part.text}</Response>
+                            </MessageContent>
+                          </Message>
+                        </Fragment>
+                      );
                     }
 
-                    return (
-                      <MessageTool
-                        part={part}
-                        key={`${message.id}-${i}`}
-                        toolResultPart={toolResultPart}
-                        toolName={toolName}
-                      />
-                    );
-                  }
+                    case "reasoning":
+                      return (
+                        <Reasoning key={`${message.id}-${i}`} className="w-full">
+                          <ReasoningTrigger />
+                          <ReasoningContent>{part.text}</ReasoningContent>
+                        </Reasoning>
+                      );
 
-                  default: {
-                    // Handle tool invocations (type is "tool-{toolName}")
-                    if (isToolPart(part) && part.type?.startsWith("tool-")) {
-                      const toolName = part.type.replace("tool-", "");
+                    case "dynamic-tool": {
+                      if (!isToolPart(part)) return null;
+                      const toolName = part.toolName;
 
                       // Look ahead for tool result (same tool call ID)
-                      // biome-ignore lint/suspicious/noExplicitAny: Tool result structure varies by tool type
-                      let toolResultPart: any = null;
-                      const nextPart = message.parts[i + 1];
+                      let toolResultPart = null;
+                      const nextPart = message.parts?.[i + 1];
                       if (
                         nextPart &&
                         isToolPart(nextPart) &&
-                        nextPart.type?.startsWith("tool-") &&
+                        nextPart.type === "dynamic-tool" &&
                         nextPart.state === "output-available" &&
                         nextPart.toolCallId === part.toolCallId
                       ) {
@@ -184,13 +308,43 @@ export function ChatMessages({
                       );
                     }
 
-                    // Skip step-start and other non-renderable parts
-                    return null;
+                    default: {
+                      // Handle tool invocations (type is "tool-{toolName}")
+                      if (isToolPart(part) && part.type?.startsWith("tool-")) {
+                        const toolName = part.type.replace("tool-", "");
+
+                        // Look ahead for tool result (same tool call ID)
+                        // biome-ignore lint/suspicious/noExplicitAny: Tool result structure varies by tool type
+                        let toolResultPart: any = null;
+                        const nextPart = message.parts?.[i + 1];
+                        if (
+                          nextPart &&
+                          isToolPart(nextPart) &&
+                          nextPart.type?.startsWith("tool-") &&
+                          nextPart.state === "output-available" &&
+                          nextPart.toolCallId === part.toolCallId
+                        ) {
+                          toolResultPart = nextPart;
+                        }
+
+                        return (
+                          <MessageTool
+                            part={part}
+                            key={`${message.id}-${i}`}
+                            toolResultPart={toolResultPart}
+                            toolName={toolName}
+                          />
+                        );
+                      }
+
+                      // Skip step-start and other non-renderable parts
+                      return null;
+                    }
                   }
-                }
-              })}
-            </div>
-          ))}
+                })}
+              </div>
+            );
+          })}
           {(status === "submitted" ||
             (status === "streaming" && isStreamingStalled)) && (
             <Message from="assistant">

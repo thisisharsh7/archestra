@@ -80,6 +80,8 @@ export default function ChatPage() {
   const loadedConversationRef = useRef<string | undefined>(undefined);
   const pendingPromptRef = useRef<string | undefined>(undefined);
   const newlyCreatedConversationRef = useRef<string | undefined>(undefined);
+  const previousStatusRef = useRef<"ready" | "submitted" | "streaming" | "error">("ready");
+  const userMessageJustEdited = useRef(false);
 
   // Dialog management for MCP installation
   const { isDialogOpened, openDialog, closeDialog } = useDialogs<
@@ -279,6 +281,7 @@ export default function ChatPage() {
   const stop = chatSession?.stop;
   const error = chatSession?.error;
   const addToolResult = chatSession?.addToolResult;
+  const reload = chatSession?.reload;
   const pendingCustomServerToolCall = chatSession?.pendingCustomServerToolCall;
   const setPendingCustomServerToolCall =
     chatSession?.setPendingCustomServerToolCall;
@@ -339,16 +342,32 @@ export default function ChatPage() {
       loadedConversationRef.current = undefined;
     }
 
-    // Only sync messages from backend if:
+    // Detect if streaming just completed (status changed from streaming to ready)
+    const streamingJustCompleted =
+      previousStatusRef.current === "streaming" && status === "ready";
+
+    // Update previous status
+    previousStatusRef.current = status;
+
+    // Sync messages from backend if:
     // 1. We have conversation data
-    // 2. We haven't synced this conversation yet
-    // 3. The session doesn't already have messages (don't overwrite active session)
-    if (
+    // 2. We're not currently streaming (to avoid overwriting in-progress messages)
+    // 3. User message wasn't just edited (to avoid overwriting with stale data)
+    // 4. Either:
+    //    - This conversation hasn't been loaded yet (first load)
+    //    - The session is empty (initial state)
+    //    - Streaming just completed (to sync database UUIDs)
+    const shouldSync =
       conversation?.messages &&
       conversation.id === conversationId &&
-      loadedConversationRef.current !== conversationId &&
-      messages.length === 0 // Only sync if session is empty
-    ) {
+      status !== "submitted" &&
+      status !== "streaming" &&
+      !userMessageJustEdited.current &&
+      (loadedConversationRef.current !== conversationId ||
+       messages.length === 0 ||
+       streamingJustCompleted);
+
+    if (shouldSync) {
       setMessages(conversation.messages as UIMessage[]);
       loadedConversationRef.current = conversationId;
 
@@ -367,13 +386,18 @@ export default function ChatPage() {
         });
       }
     }
+
+    // Clear the flag after streaming completes
+    if (streamingJustCompleted && userMessageJustEdited.current) {
+      userMessageJustEdited.current = false;
+    }
   }, [
     conversationId,
     conversation,
     setMessages,
     sendMessage,
     status,
-    messages,
+    messages.length,
   ]);
 
   const handleSubmit = useCallback(
@@ -591,6 +615,27 @@ export default function ChatPage() {
               hideToolCalls={hideToolCalls}
               status={status}
               isLoadingConversation={isLoadingConversation}
+              onMessagesUpdate={setMessages}
+              onUserMessageEdit={(editedMessage, updatedMessages) => {
+                // After user message is edited, set messages WITHOUT the edited one, then send it fresh
+                if (setMessages && sendMessage) {
+                  // Set flag to prevent message sync from overwriting our state
+                  userMessageJustEdited.current = true;
+
+                  // Remove the edited message (last one) - we'll re-send it via sendMessage()
+                  const messagesWithoutEditedMessage = updatedMessages.slice(0, -1);
+                  setMessages(messagesWithoutEditedMessage);
+
+                  // Send the edited message to generate new response (same as handleSubmit)
+                  const editedText = editedMessage.parts?.find(p => p.type === "text")?.text || "";
+                  if (editedText.trim()) {
+                    sendMessage({
+                      role: "user",
+                      parts: [{ type: "text", text: editedText }],
+                    });
+                  }
+                }
+              }}
             />
           </div>
 
