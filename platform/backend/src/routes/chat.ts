@@ -879,7 +879,12 @@ The title should capture the main topic or theme of the conversation. Respond wi
       },
     },
     async (
-      { params: { id }, body: { partIndex, text, deleteSubsequentMessages }, user, organizationId },
+      {
+        params: { id },
+        body: { partIndex, text, deleteSubsequentMessages },
+        user,
+        organizationId,
+      },
       reply,
     ) => {
       // Fetch the message to get its conversation ID

@@ -50,7 +50,10 @@ class ConversationModel {
           eq(schema.conversationsTable.organizationId, organizationId),
         ),
       )
-      .orderBy(desc(schema.conversationsTable.createdAt), schema.messagesTable.createdAt);
+      .orderBy(
+        desc(schema.conversationsTable.createdAt),
+        schema.messagesTable.createdAt,
+      );
 
     // Group messages by conversation
     const conversationMap = new Map<string, Conversation>();

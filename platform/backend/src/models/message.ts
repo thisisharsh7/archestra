@@ -57,7 +57,7 @@ class MessageModel {
     newText: string,
   ): Promise<Message> {
     // Fetch the current message
-    const message = await this.findById(messageId);
+    const message = await MessageModel.findById(messageId);
 
     if (!message) {
       throw new Error("Message not found");
@@ -91,7 +91,7 @@ class MessageModel {
     messageId: string,
   ): Promise<void> {
     // Get the message to find its createdAt timestamp
-    const message = await this.findById(messageId);
+    const message = await MessageModel.findById(messageId);
     if (!message) {
       throw new Error("Message not found");
     }
