@@ -2,7 +2,7 @@
 
 import { E2eTestId, MCP_SERVER_TOOL_NAME_SEPARATOR } from "@shared";
 import { Search, UserPlus, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -91,14 +91,6 @@ export function McpToolsDialog({
   const [selectedToolIds, setSelectedToolIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Clear selections when dialog closes
-  useEffect(() => {
-    if (!open) {
-      setSelectedToolIds([]);
-      setSearchQuery("");
-    }
-  }, [open]);
-
   const filteredTools = useMemo(() => {
     if (!searchQuery.trim()) return tools;
 
@@ -143,7 +135,8 @@ export function McpToolsDialog({
       selectedToolIds.includes(tool.id),
     );
     onBulkAssignTools(selectedTools);
-    // Don't clear selection here - it will be cleared when the bulk assign dialog closes
+    // Clear selections immediately after bulk assignment
+    setSelectedToolIds([]);
   };
 
   const handleDialogChange = (newOpen: boolean) => {
