@@ -33,7 +33,10 @@ interface ChatMessagesProps {
   status: ChatStatus;
   isLoadingConversation?: boolean;
   onMessagesUpdate?: (messages: UIMessage[]) => void;
-  onUserMessageEdit?: (editedMessage: UIMessage, updatedMessages: UIMessage[]) => void;
+  onUserMessageEdit?: (
+    editedMessage: UIMessage,
+    updatedMessages: UIMessage[],
+  ) => void;
 }
 
 // Type guards for tool parts
@@ -275,7 +278,10 @@ export function ChatMessages({
 
                     case "reasoning":
                       return (
-                        <Reasoning key={`${message.id}-${i}`} className="w-full">
+                        <Reasoning
+                          key={`${message.id}-${i}`}
+                          className="w-full"
+                        >
                           <ReasoningTrigger />
                           <ReasoningContent>{part.text}</ReasoningContent>
                         </Reasoning>

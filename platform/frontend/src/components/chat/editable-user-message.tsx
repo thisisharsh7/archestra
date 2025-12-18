@@ -81,7 +81,8 @@ export function EditableUserMessage({
             <div className="text-xs text-muted-foreground mt-2 flex items-start gap-1">
               <span>⚠️</span>
               <span>
-                Editing will regenerate the response and delete all messages below
+                Editing will regenerate the response and delete all messages
+                below
               </span>
             </div>
           )}
