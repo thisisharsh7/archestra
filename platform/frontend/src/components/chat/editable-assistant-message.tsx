@@ -56,20 +56,15 @@ export function EditableAssistantMessage({
 
   const handleSaveEdit = async () => {
     setIsSaving(true);
-    try {
-      await onSave(messageId, partIndex, editedText);
-      onCancelEdit();
-    } catch (error) {
-      console.error("Failed to save message:", error);
-    } finally {
-      setIsSaving(false);
-    }
+    await onSave(messageId, partIndex, editedText);
+    onCancelEdit();
+    setIsSaving(false);
   };
 
   if (isEditing) {
     return (
-      <Message from="assistant">
-        <MessageContent className="relative max-w-[70%] min-w-[50%] px-0 py-0 ring-2 ring-primary/50">
+      <Message from="assistant" className="relative pt-0">
+        <MessageContent className="max-w-[70%] min-w-[50%] px-0 py-0 ring-2 ring-primary/50">
           <div>
             <Textarea
               value={editedText}
@@ -107,7 +102,7 @@ export function EditableAssistantMessage({
   };
 
   return (
-    <Message from="assistant">
+    <Message from="assistant" className="relative pt-0">
       <MessageContent className="group/message">
         <Response>{text}</Response>
         {showActions && (

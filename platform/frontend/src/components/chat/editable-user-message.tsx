@@ -13,7 +13,6 @@ interface EditableUserMessageProps {
   partKey: string;
   text: string;
   isEditing: boolean;
-  hasMessagesBelow: boolean;
   onStartEdit: (partKey: string, messageId: string) => void;
   onCancelEdit: () => void;
   onSave: (
@@ -29,7 +28,6 @@ export function EditableUserMessage({
   partKey,
   text,
   isEditing,
-  hasMessagesBelow,
   onStartEdit,
   onCancelEdit,
   onSave,
@@ -56,20 +54,15 @@ export function EditableUserMessage({
 
   const handleSaveEdit = async () => {
     setIsSaving(true);
-    try {
-      await onSave(messageId, partIndex, editedText);
-      onCancelEdit();
-    } catch (error) {
-      console.error("Failed to save message:", error);
-    } finally {
-      setIsSaving(false);
-    }
+    await onSave(messageId, partIndex, editedText);
+    onCancelEdit();
+    setIsSaving(false);
   };
 
   if (isEditing) {
     return (
-      <Message from="user">
-        <MessageContent className="relative max-w-[70%] min-w-[50%] px-0 py-0 ring-2 ring-primary/50">
+      <Message from="user" className="relative pb-9">
+        <MessageContent className="max-w-[70%] min-w-[50%] px-0 py-0 ring-2 ring-primary/50">
           <div>
             <Textarea
               value={editedText}
@@ -109,7 +102,7 @@ export function EditableUserMessage({
   };
 
   return (
-    <Message from="user">
+    <Message from="user" className="relative pb-9">
       <MessageContent className="group/message">
         <Response>{text}</Response>
         <div className="absolute bottom-1 right-0 flex gap-1 opacity-0 group-hover/message:opacity-100 transition-opacity z-10">

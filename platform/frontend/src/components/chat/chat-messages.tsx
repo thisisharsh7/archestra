@@ -1,5 +1,4 @@
 import type { UIMessage } from "@ai-sdk/react";
-import { archestraApiSdk } from "@shared";
 import type { ChatStatus, DynamicToolUIPart, ToolUIPart } from "ai";
 import Image from "next/image";
 import { Fragment, useEffect, useRef, useState } from "react";
@@ -22,12 +21,12 @@ import {
   ToolInput,
   ToolOutput,
 } from "@/components/ai-elements/tool";
+import { useUpdateChatMessage } from "@/lib/chat-message.query";
 import { EditableAssistantMessage } from "./editable-assistant-message";
 import { EditableUserMessage } from "./editable-user-message";
 
-const { updateChatMessage } = archestraApiSdk;
-
 interface ChatMessagesProps {
+  conversationId: string | undefined;
   messages: UIMessage[];
   hideToolCalls?: boolean;
   status: ChatStatus;
@@ -60,6 +59,7 @@ function isToolPart(part: any): part is {
 }
 
 export function ChatMessages({
+  conversationId,
   messages,
   hideToolCalls = false,
   status,
@@ -71,6 +71,9 @@ export function ChatMessages({
   // Track editing by messageId-partIndex to support multiple text parts per message
   const [editingPartKey, setEditingPartKey] = useState<string | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+
+  // Initialize mutation hook with conversationId (use empty string as fallback for hook rules)
+  const updateChatMessageMutation = useUpdateChatMessage(conversationId || "");
 
   const handleStartEdit = (partKey: string, messageId?: string) => {
     setEditingPartKey(partKey);
@@ -89,28 +92,15 @@ export function ChatMessages({
     partIndex: number,
     newText: string,
   ) => {
-    try {
-      // Call the API to update the message (no subsequent deletion for assistant messages)
-      const { data, error } = await updateChatMessage({
-        path: { id: messageId },
-        body: { partIndex, text: newText },
-      });
+    const data = await updateChatMessageMutation.mutateAsync({
+      messageId,
+      partIndex,
+      text: newText,
+    });
 
-      if (error) {
-        console.error("Update message API error:", error);
-        const errorMessage =
-          (error as { error?: { message?: string } })?.error?.message ||
-          JSON.stringify(error);
-        throw new Error(`Failed to update message: ${errorMessage}`);
-      }
-
-      // Update local state to reflect the change immediately
-      if (onMessagesUpdate && data?.messages) {
-        onMessagesUpdate(data.messages as UIMessage[]);
-      }
-    } catch (error) {
-      console.error("Failed to update assistant message:", error);
-      throw error;
+    // Update local state to reflect the change immediately
+    if (onMessagesUpdate && data?.messages) {
+      onMessagesUpdate(data.messages as UIMessage[]);
     }
   };
 
@@ -119,40 +109,24 @@ export function ChatMessages({
     partIndex: number,
     newText: string,
   ) => {
-    try {
-      // Call the API to update the message and delete subsequent messages
-      const { data, error } = await updateChatMessage({
-        path: { id: messageId },
-        body: {
-          partIndex,
-          text: newText,
-          deleteSubsequentMessages: true,
-        },
-      });
+    const data = await updateChatMessageMutation.mutateAsync({
+      messageId,
+      partIndex,
+      text: newText,
+      deleteSubsequentMessages: true,
+    });
 
-      if (error) {
-        console.error("Update message API error:", error);
-        const errorMessage =
-          (error as { error?: { message?: string } })?.error?.message ||
-          JSON.stringify(error);
-        throw new Error(`Failed to update message: ${errorMessage}`);
+    // Don't call onMessagesUpdate here - let onUserMessageEdit handle state
+    // to avoid race condition with old messages reappearing
+
+    // Find the edited message and trigger regeneration
+    if (onUserMessageEdit && data?.messages) {
+      const editedMessage = (data.messages as UIMessage[]).find(
+        (m) => m.id === messageId,
+      );
+      if (editedMessage) {
+        onUserMessageEdit(editedMessage, data.messages as UIMessage[]);
       }
-
-      // Don't call onMessagesUpdate here - let onUserMessageEdit handle state
-      // to avoid race condition with old messages reappearing
-
-      // Find the edited message and trigger regeneration
-      if (onUserMessageEdit && data?.messages) {
-        const editedMessage = (data.messages as UIMessage[]).find(
-          (m) => m.id === messageId,
-        );
-        if (editedMessage) {
-          onUserMessageEdit(editedMessage, data.messages as UIMessage[]);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to update user message:", error);
-      throw error;
     }
   };
 
@@ -281,7 +255,6 @@ export function ChatMessages({
 
                       // Use editable component for user messages
                       if (message.role === "user") {
-                        const hasMessagesBelow = idx < messages.length - 1;
                         return (
                           <Fragment key={partKey}>
                             <EditableUserMessage
@@ -290,7 +263,6 @@ export function ChatMessages({
                               partKey={partKey}
                               text={part.text}
                               isEditing={editingPartKey === partKey}
-                              hasMessagesBelow={hasMessagesBelow}
                               onStartEdit={handleStartEdit}
                               onCancelEdit={handleCancelEdit}
                               onSave={handleSaveUserMessage}

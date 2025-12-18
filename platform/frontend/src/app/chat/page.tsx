@@ -620,6 +620,7 @@ export default function ChatPage() {
 
           <div className="flex-1 overflow-y-auto">
             <ChatMessages
+              conversationId={conversationId}
               messages={messages}
               hideToolCalls={hideToolCalls}
               status={status}
