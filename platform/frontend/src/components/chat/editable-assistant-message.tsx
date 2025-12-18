@@ -1,12 +1,11 @@
 "use client";
 
-import { Check, Pencil, X } from "lucide-react";
+import { Check, Copy, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Response } from "@/components/ai-elements/response";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 
 interface EditableAssistantMessageProps {
   messageId: string;
@@ -14,6 +13,7 @@ interface EditableAssistantMessageProps {
   partKey: string;
   text: string;
   isEditing: boolean;
+  showActions: boolean;
   onStartEdit: (partKey: string) => void;
   onCancelEdit: () => void;
   onSave: (
@@ -29,12 +29,14 @@ export function EditableAssistantMessage({
   partKey,
   text,
   isEditing,
+  showActions,
   onStartEdit,
   onCancelEdit,
   onSave,
 }: EditableAssistantMessageProps) {
   const [editedText, setEditedText] = useState(text);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Reset edited text when entering edit mode
   useEffect(() => {
@@ -67,53 +69,76 @@ export function EditableAssistantMessage({
   if (isEditing) {
     return (
       <Message from="assistant">
-        <MessageContent className="relative">
-          <Textarea
-            value={editedText}
-            onChange={(e) => setEditedText(e.target.value)}
-            className="min-h-[100px] resize-y"
-            disabled={isSaving}
-          />
-          <div className="flex gap-2 mt-2">
-            <Button
-              size="sm"
-              onClick={handleSaveEdit}
-              disabled={isSaving || editedText.trim() === ""}
-            >
-              <Check className="h-4 w-4 mr-1" />
-              Save
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleCancelEdit}
+        <MessageContent className="relative max-w-[70%] min-w-[50%] px-0 py-0 ring-2 ring-primary/50">
+          <div>
+            <Textarea
+              value={editedText}
+              onChange={(e) => setEditedText(e.target.value)}
+              className="max-h-[240px] resize-none border-0 focus-visible:ring-0 shadow-none"
               disabled={isSaving}
-            >
-              <X className="h-4 w-4 mr-1" />
-              Cancel
-            </Button>
+            />
+            <div className="flex gap-2 p-2 justify-end">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveEdit}
+                disabled={isSaving || editedText.trim() === ""}
+              >
+                Save
+              </Button>
+            </div>
           </div>
         </MessageContent>
       </Message>
     );
   }
 
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 500);
+  };
+
   return (
     <Message from="assistant">
-      <MessageContent className="group/message relative">
+      <MessageContent className="group/message">
         <Response>{text}</Response>
-        <Button
-          size="icon"
-          variant="ghost"
-          className={cn(
-            "absolute top-2 right-2 h-6 w-6",
-            "opacity-0 group-hover/message:opacity-100 transition-opacity",
-          )}
-          onClick={handleStartEdit}
-        >
-          <Pencil className="h-3 w-3" />
-          <span className="sr-only">Edit message</span>
-        </Button>
+        {showActions && (
+          <div className="absolute -bottom-4 left-0 flex gap-1 opacity-0 group-hover/message:opacity-100 transition-opacity z-10">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-6 w-6 hover:bg-transparent"
+              onClick={handleCopy}
+              disabled={isCopied}
+            >
+              {isCopied ? (
+                <Check className="h-3 w-3 text-green-500" />
+              ) : (
+                <Copy className="h-3 w-3 text-muted-foreground hover:text-primary transition-colors" />
+              )}
+              <span className="sr-only">
+                {isCopied ? "Copied!" : "Copy message"}
+              </span>
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-6 w-6 hover:bg-transparent"
+              onClick={handleStartEdit}
+            >
+              <Pencil className="h-3 w-3 text-muted-foreground hover:text-primary transition-colors" />
+              <span className="sr-only">Edit message</span>
+            </Button>
+          </div>
+        )}
       </MessageContent>
     </Message>
   );

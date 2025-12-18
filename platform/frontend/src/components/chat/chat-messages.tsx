@@ -174,6 +174,25 @@ export function ChatMessages({
     ? messages.findIndex((m) => m.id === editingMessageId)
     : -1;
 
+  // Determine which assistant messages are the last in their consecutive sequence
+  // An assistant message is "last in sequence" if:
+  // 1. It's the last message overall, OR
+  // 2. The next message is NOT an assistant message
+  const isLastInAssistantSequence = messages.map((message, idx) => {
+    if (message.role !== "assistant") {
+      return false;
+    }
+
+    // Check if this is the last message overall
+    if (idx === messages.length - 1) {
+      return true;
+    }
+
+    // Check if the next message is not an assistant message
+    const nextMessage = messages[idx + 1];
+    return nextMessage.role !== "assistant";
+  });
+
   return (
     <Conversation className="h-full">
       <ConversationContent>
@@ -223,6 +242,22 @@ export function ChatMessages({
 
                       // Use editable component for assistant messages
                       if (message.role === "assistant") {
+                        // Only show actions if this is the last assistant message in sequence
+                        // AND this is the last text part in the message
+                        const isLastAssistantInSequence = isLastInAssistantSequence[idx];
+
+                        // Find the last text part index in this message
+                        let lastTextPartIndex = -1;
+                        for (let j = message.parts.length - 1; j >= 0; j--) {
+                          if (message.parts[j].type === "text") {
+                            lastTextPartIndex = j;
+                            break;
+                          }
+                        }
+
+                        const isLastTextPart = i === lastTextPartIndex;
+                        const showActions = isLastAssistantInSequence && isLastTextPart && status !== "streaming";
+
                         return (
                           <Fragment key={partKey}>
                             <EditableAssistantMessage
@@ -231,6 +266,7 @@ export function ChatMessages({
                               partKey={partKey}
                               text={part.text}
                               isEditing={editingPartKey === partKey}
+                              showActions={showActions}
                               onStartEdit={handleStartEdit}
                               onCancelEdit={handleCancelEdit}
                               onSave={handleSaveAssistantMessage}
