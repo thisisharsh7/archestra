@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddMcpServerInstallationRequestNoteData, AddMcpServerInstallationRequestNoteErrors, AddMcpServerInstallationRequestNoteResponses, AddTeamExternalGroupData, AddTeamExternalGroupErrors, AddTeamExternalGroupResponses, AddTeamMemberData, AddTeamMemberErrors, AddTeamMemberResponses, AnthropicMessagesWithAgentData, AnthropicMessagesWithAgentErrors, AnthropicMessagesWithAgentResponses, AnthropicMessagesWithDefaultAgentData, AnthropicMessagesWithDefaultAgentErrors, AnthropicMessagesWithDefaultAgentResponses, ApproveMcpServerInstallationRequestData, ApproveMcpServerInstallationRequestErrors, ApproveMcpServerInstallationRequestResponses, AssignToolToAgentData, AssignToolToAgentErrors, AssignToolToAgentResponses, BulkAssignChatApiKeysToProfilesData, BulkAssignChatApiKeysToProfilesErrors, BulkAssignChatApiKeysToProfilesResponses, BulkAssignToolsData, BulkAssignToolsErrors, BulkAssignToolsResponses, BulkUpdateAgentToolsData, BulkUpdateAgentToolsErrors, BulkUpdateAgentToolsResponses, CheckSecretsConnectivityData, CheckSecretsConnectivityErrors, CheckSecretsConnectivityResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, CreateChatApiKeyData, CreateChatApiKeyErrors, CreateChatApiKeyResponses, CreateChatConversationData, CreateChatConversationErrors, CreateChatConversationResponses, CreateDualLlmConfigData, CreateDualLlmConfigErrors, CreateDualLlmConfigResponses, CreateInternalMcpCatalogItemData, CreateInternalMcpCatalogItemErrors, CreateInternalMcpCatalogItemResponses, CreateLimitData, CreateLimitErrors, CreateLimitResponses, CreateMcpServerInstallationRequestData, CreateMcpServerInstallationRequestErrors, CreateMcpServerInstallationRequestResponses, CreateOptimizationRuleData, CreateOptimizationRuleErrors, CreateOptimizationRuleResponses, CreatePromptData, CreatePromptErrors, CreatePromptResponses, CreateTeamData, CreateTeamErrors, CreateTeamResponses, CreateTokenPriceData, CreateTokenPriceErrors, CreateTokenPriceResponses, CreateToolInvocationPolicyData, CreateToolInvocationPolicyErrors, CreateToolInvocationPolicyResponses, CreateTrustedDataPolicyData, CreateTrustedDataPolicyErrors, CreateTrustedDataPolicyResponses, DeclineMcpServerInstallationRequestData, DeclineMcpServerInstallationRequestErrors, DeclineMcpServerInstallationRequestResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, DeleteChatApiKeyData, DeleteChatApiKeyErrors, DeleteChatApiKeyResponses, DeleteChatConversationData, DeleteChatConversationErrors, DeleteChatConversationResponses, DeleteDualLlmConfigData, DeleteDualLlmConfigErrors, DeleteDualLlmConfigResponses, DeleteInternalMcpCatalogItemByNameData, DeleteInternalMcpCatalogItemByNameErrors, DeleteInternalMcpCatalogItemByNameResponses, DeleteInternalMcpCatalogItemData, DeleteInternalMcpCatalogItemErrors, DeleteInternalMcpCatalogItemResponses, DeleteLimitData, DeleteLimitErrors, DeleteLimitResponses, DeleteMcpServerData, DeleteMcpServerErrors, DeleteMcpServerInstallationRequestData, DeleteMcpServerInstallationRequestErrors, DeleteMcpServerInstallationRequestResponses, DeleteMcpServerResponses, DeleteOptimizationRuleData, DeleteOptimizationRuleErrors, DeleteOptimizationRuleResponses, DeletePromptData, DeletePromptErrors, DeletePromptResponses, DeleteTeamData, DeleteTeamErrors, DeleteTeamResponses, DeleteTokenPriceData, DeleteTokenPriceErrors, DeleteTokenPriceResponses, DeleteToolInvocationPolicyData, DeleteToolInvocationPolicyErrors, DeleteToolInvocationPolicyResponses, DeleteTrustedDataPolicyData, DeleteTrustedDataPolicyErrors, DeleteTrustedDataPolicyResponses, DeleteV1McpSessionsByProfileIdData, DeleteV1McpSessionsByProfileIdErrors, DeleteV1McpSessionsByProfileIdResponses, DeleteV1McpSessionsData, DeleteV1McpSessionsErrors, DeleteV1McpSessionsResponses, GenerateChatConversationTitleData, GenerateChatConversationTitleErrors, GenerateChatConversationTitleResponses, GetAgentData, GetAgentErrors, GetAgentResponses, GetAgentsData, GetAgentsErrors, GetAgentsResponses, GetAgentStatisticsData, GetAgentStatisticsErrors, GetAgentStatisticsResponses, GetAgentToolsData, GetAgentToolsErrors, GetAgentToolsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, GetAllAgentToolsData, GetAllAgentToolsErrors, GetAllAgentToolsResponses, GetApiAuthBy__Data, GetApiAuthBy__Responses, GetChatAgentMcpToolsData, GetChatAgentMcpToolsErrors, GetChatAgentMcpToolsResponses, GetChatApiKeyData, GetChatApiKeyErrors, GetChatApiKeyResponses, GetChatApiKeysData, GetChatApiKeysErrors, GetChatApiKeysResponses, GetChatConversationData, GetChatConversationErrors, GetChatConversationResponses, GetChatConversationsData, GetChatConversationsErrors, GetChatConversationsResponses, GetCostSavingsStatisticsData, GetCostSavingsStatisticsErrors, GetCostSavingsStatisticsResponses, GetDefaultAgentData, GetDefaultAgentErrors, GetDefaultAgentResponses, GetDefaultCredentialsStatusData, GetDefaultCredentialsStatusErrors, GetDefaultCredentialsStatusResponses, GetDefaultDualLlmConfigData, GetDefaultDualLlmConfigErrors, GetDefaultDualLlmConfigResponses, GetDualLlmConfigData, GetDualLlmConfigErrors, GetDualLlmConfigResponses, GetDualLlmConfigsData, GetDualLlmConfigsErrors, GetDualLlmConfigsResponses, GetDualLlmResultByToolCallIdData, GetDualLlmResultByToolCallIdErrors, GetDualLlmResultByToolCallIdResponses, GetDualLlmResultsByInteractionData, GetDualLlmResultsByInteractionErrors, GetDualLlmResultsByInteractionResponses, GetFeaturesData, GetFeaturesResponses, GetHealthData, GetHealthResponses, GetInteractionData, GetInteractionErrors, GetInteractionResponses, GetInteractionsData, GetInteractionsErrors, GetInteractionsResponses, GetInternalMcpCatalogData, GetInternalMcpCatalogErrors, GetInternalMcpCatalogItemData, GetInternalMcpCatalogItemErrors, GetInternalMcpCatalogItemResponses, GetInternalMcpCatalogResponses, GetLabelKeysData, GetLabelKeysErrors, GetLabelKeysResponses, GetLabelValuesData, GetLabelValuesErrors, GetLabelValuesResponses, GetLimitData, GetLimitErrors, GetLimitResponses, GetLimitsData, GetLimitsErrors, GetLimitsResponses, GetMcpServerData, GetMcpServerErrors, GetMcpServerInstallationRequestData, GetMcpServerInstallationRequestErrors, GetMcpServerInstallationRequestResponses, GetMcpServerInstallationRequestsData, GetMcpServerInstallationRequestsErrors, GetMcpServerInstallationRequestsResponses, GetMcpServerInstallationStatusData, GetMcpServerInstallationStatusErrors, GetMcpServerInstallationStatusResponses, GetMcpServerLogsData, GetMcpServerLogsErrors, GetMcpServerLogsResponses, GetMcpServerResponses, GetMcpServersData, GetMcpServersErrors, GetMcpServersResponses, GetMcpServerToolsData, GetMcpServerToolsErrors, GetMcpServerToolsResponses, GetMcpToolCallData, GetMcpToolCallErrors, GetMcpToolCallResponses, GetMcpToolCallsData, GetMcpToolCallsErrors, GetMcpToolCallsResponses, GetModelStatisticsData, GetModelStatisticsErrors, GetModelStatisticsResponses, GetOnboardingStatusData, GetOnboardingStatusErrors, GetOnboardingStatusResponses, GetOperatorsData, GetOperatorsErrors, GetOperatorsResponses, GetOptimizationRulesData, GetOptimizationRulesErrors, GetOptimizationRulesResponses, GetOrganizationData, GetOrganizationErrors, GetOrganizationResponses, GetOverviewStatisticsData, GetOverviewStatisticsErrors, GetOverviewStatisticsResponses, GetPromptData, GetPromptErrors, GetPromptResponses, GetPromptsData, GetPromptsErrors, GetPromptsResponses, GetPromptVersionsData, GetPromptVersionsErrors, GetPromptVersionsResponses, GetSecretData, GetSecretErrors, GetSecretResponses, GetSecretsTypeData, GetSecretsTypeErrors, GetSecretsTypeResponses, GetTeamData, GetTeamErrors, GetTeamExternalGroupsData, GetTeamExternalGroupsErrors, GetTeamExternalGroupsResponses, GetTeamMembersData, GetTeamMembersErrors, GetTeamMembersResponses, GetTeamResponses, GetTeamsData, GetTeamsErrors, GetTeamsResponses, GetTeamStatisticsData, GetTeamStatisticsErrors, GetTeamStatisticsResponses, GetTokenPriceData, GetTokenPriceErrors, GetTokenPriceResponses, GetTokenPricesData, GetTokenPricesErrors, GetTokenPricesResponses, GetTokensData, GetTokensErrors, GetTokensResponses, GetTokenValueData, GetTokenValueErrors, GetTokenValueResponses, GetToolInvocationPoliciesData, GetToolInvocationPoliciesErrors, GetToolInvocationPoliciesResponses, GetToolInvocationPolicyData, GetToolInvocationPolicyErrors, GetToolInvocationPolicyResponses, GetToolsData, GetToolsErrors, GetToolsResponses, GetTrustedDataPoliciesData, GetTrustedDataPoliciesErrors, GetTrustedDataPoliciesResponses, GetTrustedDataPolicyData, GetTrustedDataPolicyErrors, GetTrustedDataPolicyResponses, GetUniqueExternalAgentIdsData, GetUniqueExternalAgentIdsErrors, GetUniqueExternalAgentIdsResponses, GetV1McpByProfileIdData, GetV1McpByProfileIdErrors, GetV1McpByProfileIdResponses, GetV1McpData, GetV1McpErrors, GetV1McpResponses, HandleOAuthCallbackData, HandleOAuthCallbackErrors, HandleOAuthCallbackResponses, InitializeSecretsManagerData, InitializeSecretsManagerErrors, InitializeSecretsManagerResponses, InitiateOAuthData, InitiateOAuthErrors, InitiateOAuthResponses, InstallMcpServerData, InstallMcpServerErrors, InstallMcpServerResponses, OpenAiChatCompletionsWithAgentData, OpenAiChatCompletionsWithAgentErrors, OpenAiChatCompletionsWithAgentResponses, OpenAiChatCompletionsWithDefaultAgentData, OpenAiChatCompletionsWithDefaultAgentErrors, OpenAiChatCompletionsWithDefaultAgentResponses, PostApiAuthBy__Data, PostApiAuthBy__Responses, PostApiAuthOrganizationRemoveMemberData, PostApiAuthOrganizationRemoveMemberResponses, PostV1GeminiByAgentIdV1BetaModelsByModelGenerateContentData, PostV1GeminiByAgentIdV1BetaModelsByModelGenerateContentErrors, PostV1GeminiByAgentIdV1BetaModelsByModelGenerateContentResponses, PostV1GeminiByAgentIdV1BetaModelsByModelStreamGenerateContentData, PostV1GeminiByAgentIdV1BetaModelsByModelStreamGenerateContentErrors, PostV1GeminiV1BetaModelsByModelGenerateContentData, PostV1GeminiV1BetaModelsByModelGenerateContentErrors, PostV1GeminiV1BetaModelsByModelGenerateContentResponses, PostV1GeminiV1BetaModelsByModelStreamGenerateContentData, PostV1GeminiV1BetaModelsByModelStreamGenerateContentErrors, PostV1McpByProfileIdData, PostV1McpByProfileIdResponses, PostV1McpData, PostV1McpResponses, RemoveTeamExternalGroupData, RemoveTeamExternalGroupErrors, RemoveTeamExternalGroupResponses, RemoveTeamMemberData, RemoveTeamMemberErrors, RemoveTeamMemberResponses, RestartMcpServerData, RestartMcpServerErrors, RestartMcpServerResponses, RollbackPromptData, RollbackPromptErrors, RollbackPromptResponses, RotateTokenData, RotateTokenErrors, RotateTokenResponses, SetChatApiKeyDefaultData, SetChatApiKeyDefaultErrors, SetChatApiKeyDefaultResponses, StreamChatData, StreamChatErrors, UnassignToolFromAgentData, UnassignToolFromAgentErrors, UnassignToolFromAgentResponses, UnsetChatApiKeyDefaultData, UnsetChatApiKeyDefaultErrors, UnsetChatApiKeyDefaultResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses, UpdateAgentToolData, UpdateAgentToolErrors, UpdateAgentToolResponses, UpdateChatApiKeyData, UpdateChatApiKeyErrors, UpdateChatApiKeyProfilesData, UpdateChatApiKeyProfilesErrors, UpdateChatApiKeyProfilesResponses, UpdateChatApiKeyResponses, UpdateChatConversationData, UpdateChatConversationErrors, UpdateChatConversationResponses, UpdateChatMessageData, UpdateChatMessageErrors, UpdateChatMessageResponses, UpdateDualLlmConfigData, UpdateDualLlmConfigErrors, UpdateDualLlmConfigResponses, UpdateInternalMcpCatalogItemData, UpdateInternalMcpCatalogItemErrors, UpdateInternalMcpCatalogItemResponses, UpdateLimitData, UpdateLimitErrors, UpdateLimitResponses, UpdateMcpServerInstallationRequestData, UpdateMcpServerInstallationRequestErrors, UpdateMcpServerInstallationRequestResponses, UpdateOptimizationRuleData, UpdateOptimizationRuleErrors, UpdateOptimizationRuleResponses, UpdateOrganizationData, UpdateOrganizationErrors, UpdateOrganizationResponses, UpdatePromptData, UpdatePromptErrors, UpdatePromptResponses, UpdateTeamData, UpdateTeamErrors, UpdateTeamResponses, UpdateTokenPriceData, UpdateTokenPriceErrors, UpdateTokenPriceResponses, UpdateToolInvocationPolicyData, UpdateToolInvocationPolicyErrors, UpdateToolInvocationPolicyResponses, UpdateTrustedDataPolicyData, UpdateTrustedDataPolicyErrors, UpdateTrustedDataPolicyResponses } from './types.gen';
+import type { AddMcpServerInstallationRequestNoteData, AddMcpServerInstallationRequestNoteErrors, AddMcpServerInstallationRequestNoteResponses, AddTeamExternalGroupData, AddTeamExternalGroupErrors, AddTeamExternalGroupResponses, AddTeamMemberData, AddTeamMemberErrors, AddTeamMemberResponses, AnthropicMessagesWithAgentData, AnthropicMessagesWithAgentErrors, AnthropicMessagesWithAgentResponses, AnthropicMessagesWithDefaultAgentData, AnthropicMessagesWithDefaultAgentErrors, AnthropicMessagesWithDefaultAgentResponses, ApproveMcpServerInstallationRequestData, ApproveMcpServerInstallationRequestErrors, ApproveMcpServerInstallationRequestResponses, AssignToolToAgentData, AssignToolToAgentErrors, AssignToolToAgentResponses, AutoConfigureAgentToolPoliciesData, AutoConfigureAgentToolPoliciesErrors, AutoConfigureAgentToolPoliciesResponses, BulkAssignChatApiKeysToProfilesData, BulkAssignChatApiKeysToProfilesErrors, BulkAssignChatApiKeysToProfilesResponses, BulkAssignToolsData, BulkAssignToolsErrors, BulkAssignToolsResponses, BulkUpdateAgentToolsData, BulkUpdateAgentToolsErrors, BulkUpdateAgentToolsResponses, CheckSecretsConnectivityData, CheckSecretsConnectivityErrors, CheckSecretsConnectivityResponses, CheckTeamVaultFolderConnectivityData, CheckTeamVaultFolderConnectivityErrors, CheckTeamVaultFolderConnectivityResponses, CreateAgentData, CreateAgentErrors, CreateAgentResponses, CreateChatApiKeyData, CreateChatApiKeyErrors, CreateChatApiKeyResponses, CreateChatConversationData, CreateChatConversationErrors, CreateChatConversationResponses, CreateDualLlmConfigData, CreateDualLlmConfigErrors, CreateDualLlmConfigResponses, CreateInternalMcpCatalogItemData, CreateInternalMcpCatalogItemErrors, CreateInternalMcpCatalogItemResponses, CreateLimitData, CreateLimitErrors, CreateLimitResponses, CreateMcpServerInstallationRequestData, CreateMcpServerInstallationRequestErrors, CreateMcpServerInstallationRequestResponses, CreateOptimizationRuleData, CreateOptimizationRuleErrors, CreateOptimizationRuleResponses, CreatePromptData, CreatePromptErrors, CreatePromptResponses, CreateRoleData, CreateRoleErrors, CreateRoleResponses, CreateSsoProviderData, CreateSsoProviderErrors, CreateSsoProviderResponses, CreateTeamData, CreateTeamErrors, CreateTeamResponses, CreateTokenPriceData, CreateTokenPriceErrors, CreateTokenPriceResponses, CreateToolInvocationPolicyData, CreateToolInvocationPolicyErrors, CreateToolInvocationPolicyResponses, CreateTrustedDataPolicyData, CreateTrustedDataPolicyErrors, CreateTrustedDataPolicyResponses, DeclineMcpServerInstallationRequestData, DeclineMcpServerInstallationRequestErrors, DeclineMcpServerInstallationRequestResponses, DeleteAgentData, DeleteAgentErrors, DeleteAgentResponses, DeleteChatApiKeyData, DeleteChatApiKeyErrors, DeleteChatApiKeyResponses, DeleteChatConversationData, DeleteChatConversationErrors, DeleteChatConversationResponses, DeleteDualLlmConfigData, DeleteDualLlmConfigErrors, DeleteDualLlmConfigResponses, DeleteInternalMcpCatalogItemByNameData, DeleteInternalMcpCatalogItemByNameErrors, DeleteInternalMcpCatalogItemByNameResponses, DeleteInternalMcpCatalogItemData, DeleteInternalMcpCatalogItemErrors, DeleteInternalMcpCatalogItemResponses, DeleteLimitData, DeleteLimitErrors, DeleteLimitResponses, DeleteMcpServerData, DeleteMcpServerErrors, DeleteMcpServerInstallationRequestData, DeleteMcpServerInstallationRequestErrors, DeleteMcpServerInstallationRequestResponses, DeleteMcpServerResponses, DeleteOptimizationRuleData, DeleteOptimizationRuleErrors, DeleteOptimizationRuleResponses, DeletePromptData, DeletePromptErrors, DeletePromptResponses, DeleteRoleData, DeleteRoleErrors, DeleteRoleResponses, DeleteSsoProviderData, DeleteSsoProviderErrors, DeleteSsoProviderResponses, DeleteTeamData, DeleteTeamErrors, DeleteTeamResponses, DeleteTeamVaultFolderData, DeleteTeamVaultFolderErrors, DeleteTeamVaultFolderResponses, DeleteTokenPriceData, DeleteTokenPriceErrors, DeleteTokenPriceResponses, DeleteToolInvocationPolicyData, DeleteToolInvocationPolicyErrors, DeleteToolInvocationPolicyResponses, DeleteTrustedDataPolicyData, DeleteTrustedDataPolicyErrors, DeleteTrustedDataPolicyResponses, DeleteV1McpSessionsByProfileIdData, DeleteV1McpSessionsByProfileIdErrors, DeleteV1McpSessionsByProfileIdResponses, DeleteV1McpSessionsData, DeleteV1McpSessionsErrors, DeleteV1McpSessionsResponses, GenerateChatConversationTitleData, GenerateChatConversationTitleErrors, GenerateChatConversationTitleResponses, GetAgentData, GetAgentErrors, GetAgentResponses, GetAgentsData, GetAgentsErrors, GetAgentsResponses, GetAgentStatisticsData, GetAgentStatisticsErrors, GetAgentStatisticsResponses, GetAgentToolsData, GetAgentToolsErrors, GetAgentToolsResponses, GetAllAgentsData, GetAllAgentsErrors, GetAllAgentsResponses, GetAllAgentToolsData, GetAllAgentToolsErrors, GetAllAgentToolsResponses, GetApiAuthBy__Data, GetApiAuthBy__Responses, GetApiPolicyConfigSubagentPromptData, GetApiPolicyConfigSubagentPromptErrors, GetApiPolicyConfigSubagentPromptResponses, GetChatAgentMcpToolsData, GetChatAgentMcpToolsErrors, GetChatAgentMcpToolsResponses, GetChatApiKeyData, GetChatApiKeyErrors, GetChatApiKeyResponses, GetChatApiKeysData, GetChatApiKeysErrors, GetChatApiKeysResponses, GetChatConversationData, GetChatConversationErrors, GetChatConversationResponses, GetChatConversationsData, GetChatConversationsErrors, GetChatConversationsResponses, GetCostSavingsStatisticsData, GetCostSavingsStatisticsErrors, GetCostSavingsStatisticsResponses, GetDefaultAgentData, GetDefaultAgentErrors, GetDefaultAgentResponses, GetDefaultCredentialsStatusData, GetDefaultCredentialsStatusErrors, GetDefaultCredentialsStatusResponses, GetDefaultDualLlmConfigData, GetDefaultDualLlmConfigErrors, GetDefaultDualLlmConfigResponses, GetDualLlmConfigData, GetDualLlmConfigErrors, GetDualLlmConfigResponses, GetDualLlmConfigsData, GetDualLlmConfigsErrors, GetDualLlmConfigsResponses, GetDualLlmResultByToolCallIdData, GetDualLlmResultByToolCallIdErrors, GetDualLlmResultByToolCallIdResponses, GetDualLlmResultsByInteractionData, GetDualLlmResultsByInteractionErrors, GetDualLlmResultsByInteractionResponses, GetFeaturesData, GetFeaturesResponses, GetHealthData, GetHealthResponses, GetInteractionData, GetInteractionErrors, GetInteractionResponses, GetInteractionsData, GetInteractionsErrors, GetInteractionsResponses, GetInternalMcpCatalogData, GetInternalMcpCatalogErrors, GetInternalMcpCatalogItemData, GetInternalMcpCatalogItemErrors, GetInternalMcpCatalogItemResponses, GetInternalMcpCatalogResponses, GetLabelKeysData, GetLabelKeysErrors, GetLabelKeysResponses, GetLabelValuesData, GetLabelValuesErrors, GetLabelValuesResponses, GetLimitData, GetLimitErrors, GetLimitResponses, GetLimitsData, GetLimitsErrors, GetLimitsResponses, GetMcpServerData, GetMcpServerErrors, GetMcpServerInstallationRequestData, GetMcpServerInstallationRequestErrors, GetMcpServerInstallationRequestResponses, GetMcpServerInstallationRequestsData, GetMcpServerInstallationRequestsErrors, GetMcpServerInstallationRequestsResponses, GetMcpServerInstallationStatusData, GetMcpServerInstallationStatusErrors, GetMcpServerInstallationStatusResponses, GetMcpServerLogsData, GetMcpServerLogsErrors, GetMcpServerLogsResponses, GetMcpServerResponses, GetMcpServersData, GetMcpServersErrors, GetMcpServersResponses, GetMcpServerToolsData, GetMcpServerToolsErrors, GetMcpServerToolsResponses, GetMcpToolCallData, GetMcpToolCallErrors, GetMcpToolCallResponses, GetMcpToolCallsData, GetMcpToolCallsErrors, GetMcpToolCallsResponses, GetModelStatisticsData, GetModelStatisticsErrors, GetModelStatisticsResponses, GetOnboardingStatusData, GetOnboardingStatusErrors, GetOnboardingStatusResponses, GetOperatorsData, GetOperatorsErrors, GetOperatorsResponses, GetOptimizationRulesData, GetOptimizationRulesErrors, GetOptimizationRulesResponses, GetOrganizationData, GetOrganizationErrors, GetOrganizationResponses, GetOverviewStatisticsData, GetOverviewStatisticsErrors, GetOverviewStatisticsResponses, GetPromptData, GetPromptErrors, GetPromptResponses, GetPromptsData, GetPromptsErrors, GetPromptsResponses, GetPromptVersionsData, GetPromptVersionsErrors, GetPromptVersionsResponses, GetPublicSsoProvidersData, GetPublicSsoProvidersErrors, GetPublicSsoProvidersResponses, GetRoleData, GetRoleErrors, GetRoleResponses, GetRolesData, GetRolesErrors, GetRolesResponses, GetSecretData, GetSecretErrors, GetSecretResponses, GetSecretsTypeData, GetSecretsTypeErrors, GetSecretsTypeResponses, GetSsoProviderData, GetSsoProviderErrors, GetSsoProviderResponses, GetSsoProvidersData, GetSsoProvidersErrors, GetSsoProvidersResponses, GetTeamData, GetTeamErrors, GetTeamExternalGroupsData, GetTeamExternalGroupsErrors, GetTeamExternalGroupsResponses, GetTeamMembersData, GetTeamMembersErrors, GetTeamMembersResponses, GetTeamResponses, GetTeamsData, GetTeamsErrors, GetTeamsResponses, GetTeamStatisticsData, GetTeamStatisticsErrors, GetTeamStatisticsResponses, GetTeamVaultFolderData, GetTeamVaultFolderErrors, GetTeamVaultFolderResponses, GetTeamVaultSecretKeysData, GetTeamVaultSecretKeysErrors, GetTeamVaultSecretKeysResponses, GetTokenPriceData, GetTokenPriceErrors, GetTokenPriceResponses, GetTokenPricesData, GetTokenPricesErrors, GetTokenPricesResponses, GetTokensData, GetTokensErrors, GetTokensResponses, GetTokenValueData, GetTokenValueErrors, GetTokenValueResponses, GetToolInvocationPoliciesData, GetToolInvocationPoliciesErrors, GetToolInvocationPoliciesResponses, GetToolInvocationPolicyData, GetToolInvocationPolicyErrors, GetToolInvocationPolicyResponses, GetToolsData, GetToolsErrors, GetToolsResponses, GetTrustedDataPoliciesData, GetTrustedDataPoliciesErrors, GetTrustedDataPoliciesResponses, GetTrustedDataPolicyData, GetTrustedDataPolicyErrors, GetTrustedDataPolicyResponses, GetUniqueExternalAgentIdsData, GetUniqueExternalAgentIdsErrors, GetUniqueExternalAgentIdsResponses, GetUniqueUserIdsData, GetUniqueUserIdsErrors, GetUniqueUserIdsResponses, GetUserPermissionsData, GetUserPermissionsErrors, GetUserPermissionsResponses, GetV1McpByProfileIdData, GetV1McpByProfileIdErrors, GetV1McpByProfileIdResponses, GetV1McpData, GetV1McpErrors, GetV1McpResponses, HandleOAuthCallbackData, HandleOAuthCallbackErrors, HandleOAuthCallbackResponses, InitializeSecretsManagerData, InitializeSecretsManagerErrors, InitializeSecretsManagerResponses, InitiateOAuthData, InitiateOAuthErrors, InitiateOAuthResponses, InstallMcpServerData, InstallMcpServerErrors, InstallMcpServerResponses, ListTeamVaultFolderSecretsData, ListTeamVaultFolderSecretsErrors, ListTeamVaultFolderSecretsResponses, OpenAiChatCompletionsWithAgentData, OpenAiChatCompletionsWithAgentErrors, OpenAiChatCompletionsWithAgentResponses, OpenAiChatCompletionsWithDefaultAgentData, OpenAiChatCompletionsWithDefaultAgentErrors, OpenAiChatCompletionsWithDefaultAgentResponses, PostApiAuthBy__Data, PostApiAuthBy__Responses, PostApiAuthOrganizationRemoveMemberData, PostApiAuthOrganizationRemoveMemberResponses, PostV1GeminiByAgentIdV1BetaModelsByModelGenerateContentData, PostV1GeminiByAgentIdV1BetaModelsByModelGenerateContentErrors, PostV1GeminiByAgentIdV1BetaModelsByModelGenerateContentResponses, PostV1GeminiByAgentIdV1BetaModelsByModelStreamGenerateContentData, PostV1GeminiByAgentIdV1BetaModelsByModelStreamGenerateContentErrors, PostV1GeminiV1BetaModelsByModelGenerateContentData, PostV1GeminiV1BetaModelsByModelGenerateContentErrors, PostV1GeminiV1BetaModelsByModelGenerateContentResponses, PostV1GeminiV1BetaModelsByModelStreamGenerateContentData, PostV1GeminiV1BetaModelsByModelStreamGenerateContentErrors, PostV1McpByProfileIdData, PostV1McpByProfileIdResponses, PostV1McpData, PostV1McpResponses, RemoveTeamExternalGroupData, RemoveTeamExternalGroupErrors, RemoveTeamExternalGroupResponses, RemoveTeamMemberData, RemoveTeamMemberErrors, RemoveTeamMemberResponses, RestartMcpServerData, RestartMcpServerErrors, RestartMcpServerResponses, RollbackPromptData, RollbackPromptErrors, RollbackPromptResponses, RotateTokenData, RotateTokenErrors, RotateTokenResponses, SetChatApiKeyDefaultData, SetChatApiKeyDefaultErrors, SetChatApiKeyDefaultResponses, SetTeamVaultFolderData, SetTeamVaultFolderErrors, SetTeamVaultFolderResponses, StreamChatData, StreamChatErrors, UnassignToolFromAgentData, UnassignToolFromAgentErrors, UnassignToolFromAgentResponses, UnsetChatApiKeyDefaultData, UnsetChatApiKeyDefaultErrors, UnsetChatApiKeyDefaultResponses, UpdateAgentData, UpdateAgentErrors, UpdateAgentResponses, UpdateAgentToolData, UpdateAgentToolErrors, UpdateAgentToolResponses, UpdateChatApiKeyData, UpdateChatApiKeyErrors, UpdateChatApiKeyProfilesData, UpdateChatApiKeyProfilesErrors, UpdateChatApiKeyProfilesResponses, UpdateChatApiKeyResponses, UpdateChatConversationData, UpdateChatConversationErrors, UpdateChatConversationResponses, UpdateDualLlmConfigData, UpdateDualLlmConfigErrors, UpdateDualLlmConfigResponses, UpdateInternalMcpCatalogItemData, UpdateInternalMcpCatalogItemErrors, UpdateInternalMcpCatalogItemResponses, UpdateLimitData, UpdateLimitErrors, UpdateLimitResponses, UpdateMcpServerInstallationRequestData, UpdateMcpServerInstallationRequestErrors, UpdateMcpServerInstallationRequestResponses, UpdateOptimizationRuleData, UpdateOptimizationRuleErrors, UpdateOptimizationRuleResponses, UpdateOrganizationData, UpdateOrganizationErrors, UpdateOrganizationResponses, UpdatePromptData, UpdatePromptErrors, UpdatePromptResponses, UpdateRoleData, UpdateRoleErrors, UpdateRoleResponses, UpdateSsoProviderData, UpdateSsoProviderErrors, UpdateSsoProviderResponses, UpdateTeamData, UpdateTeamErrors, UpdateTeamResponses, UpdateTokenPriceData, UpdateTokenPriceErrors, UpdateTokenPriceResponses, UpdateToolInvocationPolicyData, UpdateToolInvocationPolicyErrors, UpdateToolInvocationPolicyResponses, UpdateTrustedDataPolicyData, UpdateTrustedDataPolicyErrors, UpdateTrustedDataPolicyResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -118,6 +118,18 @@ export const bulkAssignTools = <ThrowOnError extends boolean = false>(options: O
  */
 export const bulkUpdateAgentTools = <ThrowOnError extends boolean = false>(options: Options<BulkUpdateAgentToolsData, ThrowOnError>) => (options.client ?? client).post<BulkUpdateAgentToolsResponses, BulkUpdateAgentToolsErrors, ThrowOnError>({
     url: '/api/agent-tools/bulk-update',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Automatically configure security policies for agent-tool assignments using Anthropic LLM analysis
+ */
+export const autoConfigureAgentToolPolicies = <ThrowOnError extends boolean = false>(options: Options<AutoConfigureAgentToolPoliciesData, ThrowOnError>) => (options.client ?? client).post<AutoConfigureAgentToolPoliciesResponses, AutoConfigureAgentToolPoliciesErrors, ThrowOnError>({
+    url: '/api/agent-tools/auto-configure-policies',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -402,18 +414,6 @@ export const generateChatConversationTitle = <ThrowOnError extends boolean = fal
 });
 
 /**
- * Update a specific text part in a message
- */
-export const updateChatMessage = <ThrowOnError extends boolean = false>(options: Options<UpdateChatMessageData, ThrowOnError>) => (options.client ?? client).patch<UpdateChatMessageResponses, UpdateChatMessageErrors, ThrowOnError>({
-    url: '/api/chat/messages/{id}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-/**
  * Get default dual LLM configuration
  */
 export const getDefaultDualLlmConfig = <ThrowOnError extends boolean = false>(options?: Options<GetDefaultDualLlmConfigData, ThrowOnError>) => (options?.client ?? client).get<GetDefaultDualLlmConfigResponses, GetDefaultDualLlmConfigErrors, ThrowOnError>({ url: '/api/dual-llm-config/default', ...options });
@@ -537,6 +537,11 @@ export const getInteractions = <ThrowOnError extends boolean = false>(options?: 
  * Get all unique external agent IDs for filtering (from X-Archestra-Agent-Id header)
  */
 export const getUniqueExternalAgentIds = <ThrowOnError extends boolean = false>(options?: Options<GetUniqueExternalAgentIdsData, ThrowOnError>) => (options?.client ?? client).get<GetUniqueExternalAgentIdsResponses, GetUniqueExternalAgentIdsErrors, ThrowOnError>({ url: '/api/interactions/external-agent-ids', ...options });
+
+/**
+ * Get all unique user IDs with names for filtering (from X-Archestra-User-Id header)
+ */
+export const getUniqueUserIds = <ThrowOnError extends boolean = false>(options?: Options<GetUniqueUserIdsData, ThrowOnError>) => (options?.client ?? client).get<GetUniqueUserIdsResponses, GetUniqueUserIdsErrors, ThrowOnError>({ url: '/api/interactions/user-ids', ...options });
 
 /**
  * Get interaction by ID
@@ -889,6 +894,13 @@ export const updateOrganization = <ThrowOnError extends boolean = false>(options
 export const getOnboardingStatus = <ThrowOnError extends boolean = false>(options?: Options<GetOnboardingStatusData, ThrowOnError>) => (options?.client ?? client).get<GetOnboardingStatusResponses, GetOnboardingStatusErrors, ThrowOnError>({ url: '/api/organization/onboarding-status', ...options });
 
 /**
+ * Get analysis prompt template
+ *
+ * Returns the prompt template used by the Policy Configuration Subagent to analyze tools
+ */
+export const getApiPolicyConfigSubagentPrompt = <ThrowOnError extends boolean = false>(options?: Options<GetApiPolicyConfigSubagentPromptData, ThrowOnError>) => (options?.client ?? client).get<GetApiPolicyConfigSubagentPromptResponses, GetApiPolicyConfigSubagentPromptErrors, ThrowOnError>({ url: '/api/policy-config-subagent/prompt', ...options });
+
+/**
  * Get all prompts for the organization filtered by user's accessible agents
  */
 export const getPrompts = <ThrowOnError extends boolean = false>(options?: Options<GetPromptsData, ThrowOnError>) => (options?.client ?? client).get<GetPromptsResponses, GetPromptsErrors, ThrowOnError>({ url: '/api/prompts', ...options });
@@ -1137,3 +1149,142 @@ export const rotateToken = <ThrowOnError extends boolean = false>(options: Optio
  * Get all tools
  */
 export const getTools = <ThrowOnError extends boolean = false>(options?: Options<GetToolsData, ThrowOnError>) => (options?.client ?? client).get<GetToolsResponses, GetToolsErrors, ThrowOnError>({ url: '/api/tools', ...options });
+
+/**
+ * Get all roles in the organization
+ */
+export const getRoles = <ThrowOnError extends boolean = false>(options?: Options<GetRolesData, ThrowOnError>) => (options?.client ?? client).get<GetRolesResponses, GetRolesErrors, ThrowOnError>({ url: '/api/roles', ...options });
+
+/**
+ * Create a new custom role
+ */
+export const createRole = <ThrowOnError extends boolean = false>(options: Options<CreateRoleData, ThrowOnError>) => (options.client ?? client).post<CreateRoleResponses, CreateRoleErrors, ThrowOnError>({
+    url: '/api/roles',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete a custom role
+ */
+export const deleteRole = <ThrowOnError extends boolean = false>(options: Options<DeleteRoleData, ThrowOnError>) => (options.client ?? client).delete<DeleteRoleResponses, DeleteRoleErrors, ThrowOnError>({ url: '/api/roles/{roleId}', ...options });
+
+/**
+ * Get a specific role by ID
+ */
+export const getRole = <ThrowOnError extends boolean = false>(options: Options<GetRoleData, ThrowOnError>) => (options.client ?? client).get<GetRoleResponses, GetRoleErrors, ThrowOnError>({ url: '/api/roles/{roleId}', ...options });
+
+/**
+ * Update a custom role
+ */
+export const updateRole = <ThrowOnError extends boolean = false>(options: Options<UpdateRoleData, ThrowOnError>) => (options.client ?? client).put<UpdateRoleResponses, UpdateRoleErrors, ThrowOnError>({
+    url: '/api/roles/{roleId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get public SSO provider list for login page (no secrets exposed)
+ */
+export const getPublicSsoProviders = <ThrowOnError extends boolean = false>(options?: Options<GetPublicSsoProvidersData, ThrowOnError>) => (options?.client ?? client).get<GetPublicSsoProvidersResponses, GetPublicSsoProvidersErrors, ThrowOnError>({ url: '/api/sso-providers/public', ...options });
+
+/**
+ * Get all SSO providers with full configuration (admin only)
+ */
+export const getSsoProviders = <ThrowOnError extends boolean = false>(options?: Options<GetSsoProvidersData, ThrowOnError>) => (options?.client ?? client).get<GetSsoProvidersResponses, GetSsoProvidersErrors, ThrowOnError>({ url: '/api/sso-providers', ...options });
+
+/**
+ * Create a new SSO provider
+ */
+export const createSsoProvider = <ThrowOnError extends boolean = false>(options: Options<CreateSsoProviderData, ThrowOnError>) => (options.client ?? client).post<CreateSsoProviderResponses, CreateSsoProviderErrors, ThrowOnError>({
+    url: '/api/sso-providers',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete SSO provider
+ */
+export const deleteSsoProvider = <ThrowOnError extends boolean = false>(options: Options<DeleteSsoProviderData, ThrowOnError>) => (options.client ?? client).delete<DeleteSsoProviderResponses, DeleteSsoProviderErrors, ThrowOnError>({ url: '/api/sso-providers/{id}', ...options });
+
+/**
+ * Get SSO provider by ID
+ */
+export const getSsoProvider = <ThrowOnError extends boolean = false>(options: Options<GetSsoProviderData, ThrowOnError>) => (options.client ?? client).get<GetSsoProviderResponses, GetSsoProviderErrors, ThrowOnError>({ url: '/api/sso-providers/{id}', ...options });
+
+/**
+ * Update SSO provider
+ */
+export const updateSsoProvider = <ThrowOnError extends boolean = false>(options: Options<UpdateSsoProviderData, ThrowOnError>) => (options.client ?? client).put<UpdateSsoProviderResponses, UpdateSsoProviderErrors, ThrowOnError>({
+    url: '/api/sso-providers/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete a team's Vault folder mapping
+ */
+export const deleteTeamVaultFolder = <ThrowOnError extends boolean = false>(options: Options<DeleteTeamVaultFolderData, ThrowOnError>) => (options.client ?? client).delete<DeleteTeamVaultFolderResponses, DeleteTeamVaultFolderErrors, ThrowOnError>({ url: '/api/teams/{teamId}/vault-folder', ...options });
+
+/**
+ * Get a team's Vault folder configuration
+ */
+export const getTeamVaultFolder = <ThrowOnError extends boolean = false>(options: Options<GetTeamVaultFolderData, ThrowOnError>) => (options.client ?? client).get<GetTeamVaultFolderResponses, GetTeamVaultFolderErrors, ThrowOnError>({ url: '/api/teams/{teamId}/vault-folder', ...options });
+
+/**
+ * Set or update a team's Vault folder path
+ */
+export const setTeamVaultFolder = <ThrowOnError extends boolean = false>(options: Options<SetTeamVaultFolderData, ThrowOnError>) => (options.client ?? client).post<SetTeamVaultFolderResponses, SetTeamVaultFolderErrors, ThrowOnError>({
+    url: '/api/teams/{teamId}/vault-folder',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Check connectivity to a team's Vault folder
+ */
+export const checkTeamVaultFolderConnectivity = <ThrowOnError extends boolean = false>(options: Options<CheckTeamVaultFolderConnectivityData, ThrowOnError>) => (options.client ?? client).post<CheckTeamVaultFolderConnectivityResponses, CheckTeamVaultFolderConnectivityErrors, ThrowOnError>({
+    url: '/api/teams/{teamId}/vault-folder/check-connectivity',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List secrets available in a team's Vault folder
+ */
+export const listTeamVaultFolderSecrets = <ThrowOnError extends boolean = false>(options: Options<ListTeamVaultFolderSecretsData, ThrowOnError>) => (options.client ?? client).get<ListTeamVaultFolderSecretsResponses, ListTeamVaultFolderSecretsErrors, ThrowOnError>({ url: '/api/teams/{teamId}/vault-folder/secrets', ...options });
+
+/**
+ * Get the keys of a specific secret in a team's Vault folder
+ */
+export const getTeamVaultSecretKeys = <ThrowOnError extends boolean = false>(options: Options<GetTeamVaultSecretKeysData, ThrowOnError>) => (options.client ?? client).post<GetTeamVaultSecretKeysResponses, GetTeamVaultSecretKeysErrors, ThrowOnError>({
+    url: '/api/teams/{teamId}/vault-folder/secrets/keys',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get current user's permissions
+ */
+export const getUserPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetUserPermissionsData, ThrowOnError>) => (options?.client ?? client).get<GetUserPermissionsResponses, GetUserPermissionsErrors, ThrowOnError>({ url: '/api/user/permissions', ...options });
