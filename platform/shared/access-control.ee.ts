@@ -438,6 +438,15 @@ export const requiredEndpointPermissionsMap: Partial<
   [RouteId.UpdateChatMessage]: {
     conversation: ["update"],
   },
+  [RouteId.GetConversationEnabledTools]: {
+    conversation: ["read"],
+  },
+  [RouteId.UpdateConversationEnabledTools]: {
+    conversation: ["update"],
+  },
+  [RouteId.DeleteConversationEnabledTools]: {
+    conversation: ["update"],
+  },
   [RouteId.GetChatApiKeys]: {
     chatSettings: ["read"],
   },

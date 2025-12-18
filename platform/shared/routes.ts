@@ -149,6 +149,9 @@ export const RouteId = {
   GenerateChatConversationTitle: "generateChatConversationTitle",
   GetChatMcpTools: "getChatMcpTools",
   UpdateChatMessage: "updateChatMessage",
+  GetConversationEnabledTools: "getConversationEnabledTools",
+  UpdateConversationEnabledTools: "updateConversationEnabledTools",
+  DeleteConversationEnabledTools: "deleteConversationEnabledTools",
 
   // Chat API Key Routes
   GetChatApiKeys: "getChatApiKeys",

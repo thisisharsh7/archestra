@@ -1,5 +1,5 @@
 {
-  "id": "f1ff6094-e15a-4998-9d86-0fb950713fad",
+  "id": "d371f3c1-2685-4fcc-acb4-d74354beb14d",
   "prevId": "9d71e3b6-ab23-4f84-b3a7-6886db7f1bef",
   "version": "7",
   "dialect": "postgresql",
@@ -780,6 +780,66 @@
         }
       },
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.conversation_enabled_tools": {
+      "name": "conversation_enabled_tools",
+      "schema": "",
+      "columns": {
+        "conversation_id": {
+          "name": "conversation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tool_id": {
+          "name": "tool_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "conversation_enabled_tools_conversation_id_conversations_id_fk": {
+          "name": "conversation_enabled_tools_conversation_id_conversations_id_fk",
+          "tableFrom": "conversation_enabled_tools",
+          "tableTo": "conversations",
+          "columnsFrom": [
+            "conversation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "conversation_enabled_tools_tool_id_tools_id_fk": {
+          "name": "conversation_enabled_tools_tool_id_tools_id_fk",
+          "tableFrom": "conversation_enabled_tools",
+          "tableTo": "tools",
+          "columnsFrom": [
+            "tool_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "conversation_enabled_tools_conversation_id_tool_id_pk": {
+          "name": "conversation_enabled_tools_conversation_id_tool_id_pk",
+          "columns": [
+            "conversation_id",
+            "tool_id"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -2338,12 +2398,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
