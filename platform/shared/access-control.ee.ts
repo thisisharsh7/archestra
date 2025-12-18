@@ -240,6 +240,9 @@ export const requiredEndpointPermissionsMap: Partial<
   [RouteId.DeleteTrustedDataPolicy]: {
     policy: ["delete"],
   },
+  [RouteId.GetPolicyConfigSubagentPrompt]: {
+    organization: ["read"],
+  },
   [RouteId.GetDefaultDualLlmConfig]: {
     dualLlmConfig: ["read"],
   },
@@ -433,6 +436,9 @@ export const requiredEndpointPermissionsMap: Partial<
     conversation: ["update"],
   },
   [RouteId.GetChatMcpTools]: {
+    conversation: ["read"],
+  },
+  [RouteId.GetChatModels]: {
     conversation: ["read"],
   },
   [RouteId.GetConversationEnabledTools]: {
