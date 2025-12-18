@@ -89,7 +89,7 @@ export function EditableUserMessage({
               </Button>
               <Button
                 size="sm"
-                 variant="secondary"
+                variant="secondary"
                 onClick={handleSaveEdit}
                 disabled={isSaving || editedText.trim() === ""}
               >

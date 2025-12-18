@@ -70,10 +70,7 @@ test.describe("PATCH /api/chat/messages/:id - API Validation", () => {
     expect(response.status()).toBe(400);
   });
 
-  test("validates request body schema", async ({
-    request,
-    makeApiRequest,
-  }) => {
+  test("validates request body schema", async ({ request, makeApiRequest }) => {
     const response = await makeApiRequest({
       request,
       method: "patch",
@@ -107,8 +104,7 @@ test.describe("PATCH /api/chat/messages/:id - API Validation", () => {
 test.describe("Chat Messages Access Control", () => {
   test("requires authentication", async ({ makeApiRequest }) => {
     const playwright = await import("@playwright/test");
-    const unauthenticatedContext =
-      await playwright.request.newContext({});
+    const unauthenticatedContext = await playwright.request.newContext({});
 
     const response = await makeApiRequest({
       request: unauthenticatedContext,

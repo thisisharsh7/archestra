@@ -244,7 +244,8 @@ export function ChatMessages({
                       if (message.role === "assistant") {
                         // Only show actions if this is the last assistant message in sequence
                         // AND this is the last text part in the message
-                        const isLastAssistantInSequence = isLastInAssistantSequence[idx];
+                        const isLastAssistantInSequence =
+                          isLastInAssistantSequence[idx];
 
                         // Find the last text part index in this message
                         let lastTextPartIndex = -1;
@@ -256,7 +257,10 @@ export function ChatMessages({
                         }
 
                         const isLastTextPart = i === lastTextPartIndex;
-                        const showActions = isLastAssistantInSequence && isLastTextPart && status !== "streaming";
+                        const showActions =
+                          isLastAssistantInSequence &&
+                          isLastTextPart &&
+                          status !== "streaming";
 
                         return (
                           <Fragment key={partKey}>
