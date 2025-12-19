@@ -24,6 +24,7 @@ import {
 import { useUpdateChatMessage } from "@/lib/chat-message.query";
 import { EditableAssistantMessage } from "./editable-assistant-message";
 import { EditableUserMessage } from "./editable-user-message";
+import { InlineChatError } from "./inline-chat-error";
 
 interface ChatMessagesProps {
   conversationId: string | undefined;
@@ -36,6 +37,7 @@ interface ChatMessagesProps {
     editedMessage: UIMessage,
     updatedMessages: UIMessage[],
   ) => void;
+  error?: Error | null;
 }
 
 // Type guards for tool parts
@@ -66,6 +68,7 @@ export function ChatMessages({
   isLoadingConversation = false,
   onMessagesUpdate,
   onUserMessageEdit,
+  error = null,
 }: ChatMessagesProps) {
   const isStreamingStalled = useStreamingStallDetection(messages, status);
   // Track editing by messageId-partIndex to support multiple text parts per message
@@ -363,6 +366,8 @@ export function ChatMessages({
               </div>
             );
           })}
+          {/* Inline error display */}
+          {error && <InlineChatError error={error} />}
           {(status === "submitted" ||
             (status === "streaming" && isStreamingStalled)) && (
             <Message from="assistant">
