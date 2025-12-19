@@ -105,6 +105,12 @@ class MessageModel {
       throw new Error("Message not found");
     }
 
+    // Verify the message belongs to the specified conversation to prevent
+    // accidentally deleting messages from a different conversation
+    if (message.conversationId !== conversationId) {
+      throw new Error("Message does not belong to the specified conversation");
+    }
+
     // Delete all messages in this conversation created after this message
     await db
       .delete(schema.messagesTable)
