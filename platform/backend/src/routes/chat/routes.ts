@@ -936,13 +936,16 @@ The title should capture the main topic or theme of the conversation. Respond wi
         throw new ApiError(404, "Message not found or access denied");
       }
 
-      // Update the message
-      await MessageModel.updateTextPart(id, partIndex, text);
-
-      // If requested, delete subsequent messages (for user message edits)
-      if (deleteSubsequentMessages) {
-        await MessageModel.deleteAfterMessage(message.conversationId, id);
-      }
+      // Update the message and optionally delete subsequent messages atomically
+      // Using a transaction ensures both operations succeed or fail together,
+      // preventing inconsistent state where message is updated but subsequent
+      // messages remain when they should have been deleted
+      await MessageModel.updateTextPartAndDeleteSubsequent(
+        id,
+        partIndex,
+        text,
+        deleteSubsequentMessages ?? false,
+      );
 
       // Return updated conversation with all messages
       const updatedConversation = await ConversationModel.findById(

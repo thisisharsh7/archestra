@@ -81,9 +81,9 @@ export function ChatMessages({
 
   const handleStartEdit = (partKey: string, messageId?: string) => {
     setEditingPartKey(partKey);
-    if (messageId) {
-      setEditingMessageId(messageId);
-    }
+    // Always reset editingMessageId to prevent stale state when switching
+    // between editing user messages (which pass messageId) and assistant messages (which don't)
+    setEditingMessageId(messageId ?? null);
   };
 
   const handleCancelEdit = () => {
