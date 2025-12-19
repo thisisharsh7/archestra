@@ -16,12 +16,15 @@ export default function NotFound() {
         {/* Message */}
         <div className="flex flex-col items-center gap-3 -mt-6">
           <h2 className="text-2xl font-semibold tracking-tight">
-            Page Not Found
+            Page Not Found :(
           </h2>
-          <p className="text-muted-foreground text-sm max-w-md">
-            This page doesn't exist. Use the sidebar to navigate to available
-            pages.
-          </p>
+            <p className="text-muted-foreground text-sm max-w-md">
+            Sorry! If that's unexpected, please{" "}
+            <Link href="https://github.com/archestra-ai/archestra/issues/new" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+              let us know
+            </Link>
+            .
+            </p>
         </div>
 
         {/* Single Action */}
