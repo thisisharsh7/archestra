@@ -339,6 +339,55 @@ describe("MessageModel", () => {
 
       expect(updated.content.parts[0].text).toBe("");
     });
+
+    test("throws error when attempting to update non-text part", async ({
+      makeUser,
+      makeOrganization,
+      makeAgent,
+    }) => {
+      const user = await makeUser();
+      const org = await makeOrganization();
+      const agent = await makeAgent({ name: "Non-text Part Agent", teams: [] });
+
+      const conversation = await ConversationModel.create({
+        userId: user.id,
+        organizationId: org.id,
+        agentId: agent.id,
+        title: "Non-text Part Test",
+        selectedModel: "claude-3-haiku-20240307",
+      });
+
+      const message = await MessageModel.create({
+        conversationId: conversation.id,
+        role: "assistant",
+        content: {
+          id: "temp-id",
+          role: "assistant",
+          parts: [
+            { type: "text", text: "Here's the result:" },
+            {
+              type: "tool-call",
+              toolCallId: "call-123",
+              toolName: "calculator",
+              args: { operation: "add", a: 1, b: 2 },
+            },
+            { type: "text", text: "The answer is 3" },
+          ],
+        },
+      });
+
+      // Attempt to update the tool-call part (index 1) should throw
+      await expect(
+        MessageModel.updateTextPart(message.id, 1, "corrupted text"),
+      ).rejects.toThrow(
+        'Cannot update non-text part: part at index 1 is of type "tool-call"',
+      );
+
+      // Verify the message was not corrupted
+      const unchanged = await MessageModel.findById(message.id);
+      expect(unchanged?.content.parts[1].type).toBe("tool-call");
+      expect(unchanged?.content.parts[1]).not.toHaveProperty("text");
+    });
   });
 
   describe("deleteAfterMessage", () => {
@@ -675,6 +724,55 @@ describe("MessageModel", () => {
       const remaining = await MessageModel.findByConversation(conversation.id);
       expect(remaining).toHaveLength(1);
       expect(remaining[0].id).toBe(message1.id);
+    });
+
+    test("throws error when message belongs to different conversation", async ({
+      makeUser,
+      makeOrganization,
+      makeAgent,
+    }) => {
+      const user = await makeUser();
+      const org = await makeOrganization();
+      const agent = await makeAgent({
+        name: "Cross-conversation Agent",
+        teams: [],
+      });
+
+      // Create two separate conversations
+      const conversationA = await ConversationModel.create({
+        userId: user.id,
+        organizationId: org.id,
+        agentId: agent.id,
+        title: "Conversation A",
+        selectedModel: "claude-3-haiku-20240307",
+      });
+
+      const conversationB = await ConversationModel.create({
+        userId: user.id,
+        organizationId: org.id,
+        agentId: agent.id,
+        title: "Conversation B",
+        selectedModel: "claude-3-haiku-20240307",
+      });
+
+      // Create a message in conversation B
+      const messageInB = await MessageModel.create({
+        conversationId: conversationB.id,
+        role: "user",
+        content: {
+          id: "temp-b1",
+          role: "user",
+          parts: [{ type: "text", text: "Message in B" }],
+        },
+      });
+
+      // Attempt to delete after messageInB but specifying conversationA
+      // This should throw an error because the message doesn't belong to conversationA
+      await expect(
+        MessageModel.deleteAfterMessage(conversationA.id, messageInB.id),
+      ).rejects.toThrow(
+        "Message does not belong to the specified conversation",
+      );
     });
   });
 });
