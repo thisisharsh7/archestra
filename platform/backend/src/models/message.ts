@@ -66,12 +66,21 @@ class MessageModel {
     // biome-ignore lint/suspicious/noExplicitAny: UIMessage content is dynamic
     const content = message.content as any;
 
-    // Update the specific part's text
-    if (content.parts?.[partIndex]) {
-      content.parts[partIndex].text = newText;
-    } else {
+    // Validate that the part exists
+    if (!content.parts?.[partIndex]) {
       throw new Error("Invalid part index");
     }
+
+    // Validate that the part is a text part to prevent data corruption
+    // Only text parts can have their text property modified
+    if (content.parts[partIndex].type !== "text") {
+      throw new Error(
+        `Cannot update non-text part: part at index ${partIndex} is of type "${content.parts[partIndex].type}"`,
+      );
+    }
+
+    // Update the specific part's text
+    content.parts[partIndex].text = newText;
 
     // Update the message in the database
     const [updatedMessage] = await db

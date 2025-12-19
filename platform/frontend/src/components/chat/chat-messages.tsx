@@ -36,6 +36,7 @@ interface ChatMessagesProps {
   onUserMessageEdit?: (
     editedMessage: UIMessage,
     updatedMessages: UIMessage[],
+    editedPartIndex: number,
   ) => void;
   error?: Error | null;
 }
@@ -123,12 +124,17 @@ export function ChatMessages({
     // to avoid race condition with old messages reappearing
 
     // Find the edited message and trigger regeneration
+    // Pass the partIndex so the caller knows which specific part was edited
     if (onUserMessageEdit && data?.messages) {
       const editedMessage = (data.messages as UIMessage[]).find(
         (m) => m.id === messageId,
       );
       if (editedMessage) {
-        onUserMessageEdit(editedMessage, data.messages as UIMessage[]);
+        onUserMessageEdit(
+          editedMessage,
+          data.messages as UIMessage[],
+          partIndex,
+        );
       }
     }
   };

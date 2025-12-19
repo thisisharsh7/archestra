@@ -624,7 +624,11 @@ export default function ChatPage() {
               status={status}
               isLoadingConversation={isLoadingConversation}
               onMessagesUpdate={setMessages}
-              onUserMessageEdit={(editedMessage, updatedMessages) => {
+              onUserMessageEdit={(
+                editedMessage,
+                updatedMessages,
+                editedPartIndex,
+              ) => {
                 // After user message is edited, set messages WITHOUT the edited one, then send it fresh
                 if (setMessages && sendMessage) {
                   // Set flag to prevent message sync from overwriting our state
@@ -638,10 +642,12 @@ export default function ChatPage() {
                   setMessages(messagesWithoutEditedMessage);
 
                   // Send the edited message to generate new response (same as handleSubmit)
+                  // Use the specific part that was edited (via editedPartIndex) instead of finding
+                  // the first text part, in case the message has multiple text parts
+                  const editedPart = editedMessage.parts?.[editedPartIndex];
                   const editedText =
-                    editedMessage.parts?.find((p) => p.type === "text")?.text ||
-                    "";
-                  if (editedText.trim()) {
+                    editedPart?.type === "text" ? editedPart.text : "";
+                  if (editedText?.trim()) {
                     sendMessage({
                       role: "user",
                       parts: [{ type: "text", text: editedText }],
