@@ -18,13 +18,18 @@ export default function NotFound() {
           <h2 className="text-2xl font-semibold tracking-tight">
             Page Not Found :(
           </h2>
-            <p className="text-muted-foreground text-sm max-w-md">
+          <p className="text-muted-foreground text-sm max-w-md">
             Sorry! If that's unexpected, please{" "}
-            <Link href="https://github.com/archestra-ai/archestra/issues/new" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+            <Link
+              href="https://github.com/archestra-ai/archestra/issues/new"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
               let us know
             </Link>
             .
-            </p>
+          </p>
         </div>
 
         {/* Single Action */}
