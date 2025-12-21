@@ -15,6 +15,7 @@ describe("OrganizationModel.getPublicAppearance", () => {
 
     expect(appearance).toEqual({
       theme: "catppuccin",
+      themeMode: "system",
       customFont: "inter",
       logo: "data:image/png;base64,abc123",
     });
@@ -45,6 +46,7 @@ describe("OrganizationModel.getPublicAppearance", () => {
         "customFont",
         "logo",
         "theme",
+        "themeMode",
       ]);
 
       // Should NOT include sensitive fields
@@ -68,6 +70,7 @@ describe("OrganizationModel.getPublicAppearance", () => {
     expect(appearance).not.toBeNull();
     if (appearance) {
       expect(appearance.theme).toBe("modern-minimal"); // Default theme
+      expect(appearance.themeMode).toBe("system"); // Default theme mode
       expect(appearance.customFont).toBe("lato"); // Default font
       expect(appearance.logo).toBeNull(); // No logo by default
     }

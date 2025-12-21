@@ -109,7 +109,12 @@ async function makeAdmin(overrides: MakeUserOverrides = {}) {
  * Creates a test organization in the database
  */
 async function makeOrganization(
-  overrides: Partial<Pick<InsertOrganization, "name" | "slug">> = {},
+  overrides: Partial<
+    Pick<
+      InsertOrganization,
+      "name" | "slug" | "theme" | "themeMode" | "customFont" | "logo"
+    >
+  > = {},
 ) {
   const orgId = crypto.randomUUID();
   const [org] = await db

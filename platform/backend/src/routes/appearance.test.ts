@@ -1,17 +1,19 @@
 import { describe, expect, test } from "@/test";
-import { fastify as createFastify } from "@/server";
+import { createFastifyInstance } from "@/server";
+import appearanceRoutes from "./appearance";
 
 describe("GET /api/appearance/public", () => {
   test("should return public appearance when organization exists", async ({
     makeOrganization,
   }) => {
-    const org = await makeOrganization({
+    await makeOrganization({
       theme: "catppuccin",
       customFont: "inter",
       logo: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
     });
 
-    const app = await createFastify();
+    const app = createFastifyInstance();
+    await app.register(appearanceRoutes);
     const response = await app.inject({
       method: "GET",
       url: "/api/appearance/public",
@@ -21,6 +23,7 @@ describe("GET /api/appearance/public", () => {
     const body = JSON.parse(response.body);
     expect(body).toEqual({
       theme: "catppuccin",
+      themeMode: "system",
       customFont: "inter",
       logo: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
     });
@@ -29,7 +32,8 @@ describe("GET /api/appearance/public", () => {
   });
 
   test("should return null when no organization exists", async () => {
-    const app = await createFastify();
+    const app = createFastifyInstance();
+    await app.register(appearanceRoutes);
     const response = await app.inject({
       method: "GET",
       url: "/api/appearance/public",
@@ -45,7 +49,8 @@ describe("GET /api/appearance/public", () => {
   test("should not require authentication", async ({ makeOrganization }) => {
     await makeOrganization();
 
-    const app = await createFastify();
+    const app = createFastifyInstance();
+    await app.register(appearanceRoutes);
     const response = await app.inject({
       method: "GET",
       url: "/api/appearance/public",
@@ -68,7 +73,8 @@ describe("GET /api/appearance/public", () => {
       customFont: "roboto",
     });
 
-    const app = await createFastify();
+    const app = createFastifyInstance();
+    await app.register(appearanceRoutes);
     const response = await app.inject({
       method: "GET",
       url: "/api/appearance/public",
@@ -78,7 +84,12 @@ describe("GET /api/appearance/public", () => {
     const body = JSON.parse(response.body);
 
     // Should only have these fields
-    expect(Object.keys(body).sort()).toEqual(["customFont", "logo", "theme"]);
+    expect(Object.keys(body).sort()).toEqual([
+      "customFont",
+      "logo",
+      "theme",
+      "themeMode",
+    ]);
 
     // Should NOT include sensitive fields
     expect(body).not.toHaveProperty("name");
@@ -92,10 +103,11 @@ describe("GET /api/appearance/public", () => {
   test("should handle default theme and font", async ({
     makeOrganization,
   }) => {
-    // Organization with defaults (cosmic-night theme, lato font)
-    const org = await makeOrganization();
+    // Organization with defaults (modern-minimal theme, lato font)
+    await makeOrganization();
 
-    const app = await createFastify();
+    const app = createFastifyInstance();
+    await app.register(appearanceRoutes);
     const response = await app.inject({
       method: "GET",
       url: "/api/appearance/public",
@@ -104,6 +116,7 @@ describe("GET /api/appearance/public", () => {
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.body);
     expect(body.theme).toBe("modern-minimal"); // Default theme
+    expect(body.themeMode).toBe("system"); // Default theme mode
     expect(body.customFont).toBe("lato"); // Default font
     expect(body.logo).toBeNull(); // No logo by default
 
