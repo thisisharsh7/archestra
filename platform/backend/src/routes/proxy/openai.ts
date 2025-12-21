@@ -23,6 +23,7 @@ import {
 } from "@/models";
 import {
   type Agent,
+  ApiError,
   constructResponseSchema,
   OpenAi,
   UuidIdSchema,
@@ -230,6 +231,13 @@ const openAiProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
       // Client declares tools they want to use - no injection needed
       // Clients handle tool execution via MCP Gateway
       const mergedTools = tools || [];
+
+      // Extract enabled tool names for filtering in evaluatePolicies
+      const enabledToolNames = new Set(
+        mergedTools.map((tool) =>
+          tool.type === "function" ? tool.function.name : tool.custom.name,
+        ),
+      );
 
       const baselineModel = body.model;
       let model = baselineModel;
@@ -561,6 +569,7 @@ const openAiProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
               }),
               resolvedAgentId,
               contextIsTrusted,
+              enabledToolNames,
             );
 
           // If there are tool calls, evaluate policies and stream the result
@@ -884,6 +893,7 @@ const openAiProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
             }),
             resolvedAgentId,
             contextIsTrusted,
+            enabledToolNames,
           );
 
         if (toolInvocationRefusal) {
@@ -977,16 +987,15 @@ const openAiProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
 
       const statusCode =
         error instanceof Error && "status" in error
-          ? (error.status as 200 | 400 | 404 | 403 | 500)
+          ? (error.status as 400 | 404 | 403 | 500)
           : 500;
 
-      return reply.status(statusCode).send({
-        error: {
-          message:
-            error instanceof Error ? error.message : "Internal server error",
-          type: "api_error",
-        },
-      });
+      const message =
+        error instanceof Error ? error.message : "Internal server error";
+
+      // Throw ApiError to let the central error handler format the response correctly
+      // This ensures the error type matches the expected schema for each status code
+      throw new ApiError(statusCode, message);
     }
   };
 

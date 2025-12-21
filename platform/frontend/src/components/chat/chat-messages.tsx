@@ -22,12 +22,24 @@ import {
   ToolOutput,
 } from "@/components/ai-elements/tool";
 import { ToolActivity } from "@/components/ai-elements/tool-activity";
+import { useUpdateChatMessage } from "@/lib/chat-message.query";
+import { EditableAssistantMessage } from "./editable-assistant-message";
+import { EditableUserMessage } from "./editable-user-message";
+import { InlineChatError } from "./inline-chat-error";
 
 interface ChatMessagesProps {
+  conversationId: string | undefined;
   messages: UIMessage[];
   hideToolCalls?: boolean;
   status: ChatStatus;
   isLoadingConversation?: boolean;
+  onMessagesUpdate?: (messages: UIMessage[]) => void;
+  onUserMessageEdit?: (
+    editedMessage: UIMessage,
+    updatedMessages: UIMessage[],
+    editedPartIndex: number,
+  ) => void;
+  error?: Error | null;
 }
 
 // Type guards for tool parts
@@ -51,12 +63,82 @@ function isToolPart(part: any): part is {
 }
 
 export function ChatMessages({
+  conversationId,
   messages,
   hideToolCalls = false,
   status,
   isLoadingConversation = false,
+  onMessagesUpdate,
+  onUserMessageEdit,
+  error = null,
 }: ChatMessagesProps) {
   const isStreamingStalled = useStreamingStallDetection(messages, status);
+  // Track editing by messageId-partIndex to support multiple text parts per message
+  const [editingPartKey, setEditingPartKey] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+
+  // Initialize mutation hook with conversationId (use empty string as fallback for hook rules)
+  const updateChatMessageMutation = useUpdateChatMessage(conversationId || "");
+
+  const handleStartEdit = (partKey: string, messageId?: string) => {
+    setEditingPartKey(partKey);
+    // Always reset editingMessageId to prevent stale state when switching
+    // between editing user messages (which pass messageId) and assistant messages (which don't)
+    setEditingMessageId(messageId ?? null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPartKey(null);
+    setEditingMessageId(null);
+  };
+
+  const handleSaveAssistantMessage = async (
+    messageId: string,
+    partIndex: number,
+    newText: string,
+  ) => {
+    const data = await updateChatMessageMutation.mutateAsync({
+      messageId,
+      partIndex,
+      text: newText,
+    });
+
+    // Update local state to reflect the change immediately
+    if (onMessagesUpdate && data?.messages) {
+      onMessagesUpdate(data.messages as UIMessage[]);
+    }
+  };
+
+  const handleSaveUserMessage = async (
+    messageId: string,
+    partIndex: number,
+    newText: string,
+  ) => {
+    const data = await updateChatMessageMutation.mutateAsync({
+      messageId,
+      partIndex,
+      text: newText,
+      deleteSubsequentMessages: true,
+    });
+
+    // Don't call onMessagesUpdate here - let onUserMessageEdit handle state
+    // to avoid race condition with old messages reappearing
+
+    // Find the edited message and trigger regeneration
+    // Pass the partIndex so the caller knows which specific part was edited
+    if (onUserMessageEdit && data?.messages) {
+      const editedMessage = (data.messages as UIMessage[]).find(
+        (m) => m.id === messageId,
+      );
+      if (editedMessage) {
+        onUserMessageEdit(
+          editedMessage,
+          data.messages as UIMessage[],
+          partIndex,
+        );
+      }
+    }
+  };
 
   if (messages.length === 0) {
     // Don't show "start conversation" message while loading - prevents flash of empty state
@@ -70,6 +152,30 @@ export function ChatMessages({
       </div>
     );
   }
+
+  // Find the index of the message being edited
+  const editingMessageIndex = editingMessageId
+    ? messages.findIndex((m) => m.id === editingMessageId)
+    : -1;
+
+  // Determine which assistant messages are the last in their consecutive sequence
+  // An assistant message is "last in sequence" if:
+  // 1. It's the last message overall, OR
+  // 2. The next message is NOT an assistant message
+  const isLastInAssistantSequence = messages.map((message, idx) => {
+    if (message.role !== "assistant") {
+      return false;
+    }
+
+    // Check if this is the last message overall
+    if (idx === messages.length - 1) {
+      return true;
+    }
+
+    // Check if the next message is not an assistant message
+    const nextMessage = messages[idx + 1];
+    return nextMessage.role !== "assistant";
+  });
 
   return (
     <Conversation className="h-full">
@@ -85,6 +191,15 @@ export function ChatMessages({
               if (nextMessage && nextMessage.role === "assistant") {
                 return null;
               }
+            }
+
+            // Hide messages below the one being edited (for user messages only)
+            if (
+              editingMessageIndex !== -1 &&
+              idx > editingMessageIndex &&
+              editingPartKey?.startsWith(messages[editingMessageIndex].id)
+            ) {
+              return null;
             }
 
             // Collect tool parts for this message and all previous assistant messages in sequence
@@ -203,14 +318,14 @@ export function ChatMessages({
 
             return (
               <div key={message.id || idx}>
-                {message.parts.map((part, i) => {
+                {message.parts?.map((part, i) => {
                   // Skip tool result parts that immediately follow a tool invocation with same toolCallId
                   if (
                     isToolPart(part) &&
                     part.state === "output-available" &&
                     i > 0
                   ) {
-                    const prevPart = message.parts[i - 1];
+                    const prevPart = message.parts?.[i - 1];
                     if (
                       isToolPart(prevPart) &&
                       prevPart.state === "input-available" &&
@@ -233,12 +348,67 @@ export function ChatMessages({
                   const isLastTextPart = i === lastTextPartIndex;
 
                   switch (part.type) {
-                    case "text":
+                    case "text": {
                       // Hide intermediate text parts when hideToolCalls is true
                       if (shouldHideTextPart(i)) {
                         return null;
                       }
 
+                      const partKey = `${message.id}-${i}`;
+
+                      // Use editable component for assistant messages
+                      if (message.role === "assistant") {
+                        // Only show actions if this is the last assistant message in sequence
+                        // AND this is the last text part in the message
+                        const isLastAssistantInSequence =
+                          isLastInAssistantSequence[idx];
+
+                        const showActions =
+                          isLastAssistantInSequence &&
+                          isLastTextPart &&
+                          status !== "streaming";
+
+                        return (
+                          <Fragment key={partKey}>
+                            <EditableAssistantMessage
+                              messageId={message.id}
+                              partIndex={i}
+                              partKey={partKey}
+                              text={part.text}
+                              isEditing={editingPartKey === partKey}
+                              showActions={showActions}
+                              onStartEdit={handleStartEdit}
+                              onCancelEdit={handleCancelEdit}
+                              onSave={handleSaveAssistantMessage}
+                            />
+                            {isLastTextPart &&
+                              hideToolCalls &&
+                              toolParts.length > 0 && (
+                                <ToolActivity tools={toolParts} />
+                              )}
+                          </Fragment>
+                        );
+                      }
+
+                      // Use editable component for user messages
+                      if (message.role === "user") {
+                        return (
+                          <Fragment key={partKey}>
+                            <EditableUserMessage
+                              messageId={message.id}
+                              partIndex={i}
+                              partKey={partKey}
+                              text={part.text}
+                              isEditing={editingPartKey === partKey}
+                              onStartEdit={handleStartEdit}
+                              onCancelEdit={handleCancelEdit}
+                              onSave={handleSaveUserMessage}
+                            />
+                          </Fragment>
+                        );
+                      }
+
+                      // Regular rendering for system messages
                       return (
                         <Fragment key={`${message.id}-${i}`}>
                           <Message from={message.role}>
@@ -249,15 +419,11 @@ export function ChatMessages({
                                 </div>
                               )}
                               <Response>{part.text}</Response>
-                              {isLastTextPart &&
-                                hideToolCalls &&
-                                toolParts.length > 0 && (
-                                  <ToolActivity tools={toolParts} />
-                                )}
                             </MessageContent>
                           </Message>
                         </Fragment>
                       );
+                    }
 
                     case "reasoning":
                       return (
@@ -276,7 +442,7 @@ export function ChatMessages({
 
                       // Look ahead for tool result (same tool call ID)
                       let toolResultPart = null;
-                      const nextPart = message.parts[i + 1];
+                      const nextPart = message.parts?.[i + 1];
                       if (
                         nextPart &&
                         isToolPart(nextPart) &&
@@ -305,7 +471,7 @@ export function ChatMessages({
                         // Look ahead for tool result (same tool call ID)
                         // biome-ignore lint/suspicious/noExplicitAny: Tool result structure varies by tool type
                         let toolResultPart: any = null;
-                        const nextPart = message.parts[i + 1];
+                        const nextPart = message.parts?.[i + 1];
                         if (
                           nextPart &&
                           isToolPart(nextPart) &&
@@ -334,6 +500,8 @@ export function ChatMessages({
               </div>
             );
           })}
+          {/* Inline error display */}
+          {error && <InlineChatError error={error} />}
           {(status === "submitted" ||
             (status === "streaming" && isStreamingStalled)) && (
             <Message from="assistant">

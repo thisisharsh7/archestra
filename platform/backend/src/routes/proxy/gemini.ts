@@ -26,6 +26,7 @@ import {
 
 import {
   type Agent,
+  ApiError,
   constructResponseSchema,
   ErrorResponsesSchema,
   Gemini,
@@ -227,6 +228,16 @@ const geminiProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
       // Client declares tools they want to use - no injection needed
       // Clients handle tool execution via MCP Gateway
       const mergedTools = tools || [];
+
+      // Extract enabled tool names from Gemini's functionDeclarations structure
+      const enabledToolNames = new Set(
+        mergedTools
+          .filter((tool) => tool.functionDeclarations !== undefined)
+          .flatMap((tool) =>
+            (tool.functionDeclarations || []).map((fd) => fd.name),
+          )
+          .filter((name): name is string => !!name),
+      );
 
       const baselineModel = modelName;
       let optimizedModelName = baselineModel;
@@ -524,6 +535,7 @@ const geminiProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
                   validToolCalls,
                   resolvedAgentId,
                   contextIsTrusted,
+                  enabledToolNames,
                 );
             }
 
@@ -804,6 +816,7 @@ const geminiProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
               validToolCalls,
               resolvedAgentId,
               contextIsTrusted,
+              enabledToolNames,
             );
           }
         }
@@ -954,18 +967,15 @@ const geminiProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
 
       const statusCode =
         error instanceof Error && "status" in error
-          ? (error.status as 200 | 400 | 404 | 403 | 500)
+          ? (error.status as 400 | 404 | 403 | 500)
           : 500;
 
-      return reply.status(statusCode).send({
-        error: {
-          message:
-            error instanceof Error
-              ? error.message
-              : "An unexpected error occurred",
-          type: "api_error",
-        },
-      });
+      const message =
+        error instanceof Error ? error.message : "An unexpected error occurred";
+
+      // Throw ApiError to let the central error handler format the response correctly
+      // This ensures the error type matches the expected schema for each status code
+      throw new ApiError(statusCode, message);
     }
   };
 

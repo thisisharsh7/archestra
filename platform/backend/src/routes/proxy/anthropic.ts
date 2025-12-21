@@ -25,6 +25,7 @@ import {
 import {
   type Agent,
   Anthropic,
+  ApiError,
   constructResponseSchema,
   UuidIdSchema,
 } from "@/types";
@@ -259,6 +260,11 @@ const anthropicProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
       // Client declares tools they want to use - no injection needed
       // Clients handle tool execution via MCP Gateway
       const mergedTools = tools || [];
+
+      // Extract enabled tool names for filtering in evaluatePolicies
+      const enabledToolNames = new Set(
+        mergedTools.map((tool) => tool.name).filter(Boolean),
+      );
 
       const baselineModel = body.model;
       let model = baselineModel;
@@ -608,6 +614,7 @@ const anthropicProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
               })),
               resolvedAgentId,
               contextIsTrusted,
+              enabledToolNames,
             );
             fastify.log.info(
               { refused: !!toolInvocationRefusal },
@@ -949,6 +956,7 @@ const anthropicProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
               })),
               resolvedAgentId,
               contextIsTrusted,
+              enabledToolNames,
             );
 
           if (toolInvocationRefusal) {
@@ -1081,7 +1089,7 @@ const anthropicProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
 
       const statusCode =
         error instanceof Error && "status" in error
-          ? (error.status as 200 | 400 | 404 | 403 | 500)
+          ? (error.status as 400 | 404 | 403 | 500)
           : 500;
 
       // Extract the actual error message from Anthropic SDK errors using lodash get
@@ -1137,13 +1145,9 @@ const anthropicProxyRoutes: FastifyPluginAsyncZod = async (fastify) => {
         return reply;
       }
 
-      // For non-streaming, send JSON error
-      return reply.status(statusCode).send({
-        error: {
-          message: errorMessage,
-          type: "api_error",
-        },
-      });
+      // For non-streaming, throw ApiError to let the central error handler format the response correctly
+      // This ensures the error type matches the expected schema for each status code
+      throw new ApiError(statusCode, errorMessage);
     }
   };
 

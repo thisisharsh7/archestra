@@ -116,6 +116,7 @@ export const RouteId = {
   GetTrustedDataPolicy: "getTrustedDataPolicy",
   UpdateTrustedDataPolicy: "updateTrustedDataPolicy",
   DeleteTrustedDataPolicy: "deleteTrustedDataPolicy",
+  GetPolicyConfigSubagentPrompt: "getPolicyConfigSubagentPrompt",
 
   // Dual LLM Config Routes
   GetDefaultDualLlmConfig: "getDefaultDualLlmConfig",
@@ -148,6 +149,11 @@ export const RouteId = {
   DeleteChatConversation: "deleteChatConversation",
   GenerateChatConversationTitle: "generateChatConversationTitle",
   GetChatMcpTools: "getChatMcpTools",
+  UpdateChatMessage: "updateChatMessage",
+  GetConversationEnabledTools: "getConversationEnabledTools",
+  UpdateConversationEnabledTools: "updateConversationEnabledTools",
+  DeleteConversationEnabledTools: "deleteConversationEnabledTools",
+  GetChatModels: "getChatModels",
 
   // Chat API Key Routes
   GetChatApiKeys: "getChatApiKeys",
@@ -208,6 +214,11 @@ export const RouteId = {
   GetTokens: "getTokens",
   GetTokenValue: "getTokenValue",
   RotateToken: "rotateToken",
+
+  // User Token Routes (Personal Tokens)
+  GetUserToken: "getUserToken",
+  GetUserTokenValue: "getUserTokenValue",
+  RotateUserToken: "rotateUserToken",
 
   // Statistics Routes
   GetTeamStatistics: "getTeamStatistics",
