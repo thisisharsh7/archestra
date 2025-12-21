@@ -536,6 +536,13 @@ export const requiredEndpointPermissionsMap: Partial<
   },
 
   /**
+   * Get public appearance settings (theme, logo, font)
+   * Available to unauthenticated users for styling login/auth pages
+   * Note: Auth is skipped in middleware for this route
+   */
+  [RouteId.GetPublicAppearance]: {},
+
+  /**
    * Get public SSO providers route (minimal info for login page)
    * Available to unauthenticated users - only returns providerId, no secrets
    * Note: Auth is skipped in middleware for this route

@@ -15,6 +15,7 @@ import { ThemeProvider } from "./_parts/theme-provider";
 import "./globals.css";
 import { OnboardingDialogWrapper } from "@/components/onboarding-dialog-wrapper";
 import { OrgThemeLoader } from "@/components/org-theme-loader";
+import { ThemeBlockingScript } from "@/components/theme-blocking-script";
 import { Toaster } from "@/components/ui/sonner";
 import { Version } from "@/components/version";
 import { ChatProvider } from "@/contexts/global-chat-context";
@@ -22,6 +23,8 @@ import { WebsocketInitializer } from "./_parts/websocket-initializer";
 import { WithAuthCheck } from "./_parts/with-auth-check";
 import { WithPagePermissions } from "./_parts/with-page-permissions";
 import { AuthProvider } from "./auth/auth-provider";
+import { getPublicAppearance } from "@/lib/appearance.server";
+import { AppearanceProvider } from "@/contexts/appearance-context";
 
 // Load fonts for white-labeling
 const latoFont = Lato({
@@ -56,56 +59,72 @@ export const metadata: Metadata = {
   description: "Enterprise MCP Platform for AI Agents",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch appearance data on the server before rendering
+  // This ensures correct theme/logo on first load (no flicker)
+  const appearance = await getPublicAppearance();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <PublicEnvScript />
+        <ThemeBlockingScript
+          serverTheme={appearance?.theme}
+          serverThemeMode={appearance?.themeMode}
+          serverFont={appearance?.customFont}
+        />
       </head>
       <body
         className={`${latoFont.variable} ${interFont.variable} ${openSansFont.variable} ${robotoFont.variable} ${sourceSansFont.variable} font-sans antialiased`}
       >
-        <ArchestraQueryClientProvider>
-          <AuthProvider>
-            <ChatProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                <PostHogProviderWrapper>
-                  <OrgThemeLoader />
-                  <WithAuthCheck>
-                    <WebsocketInitializer />
-                    <SidebarProvider>
-                      <AppSidebar />
-                      <main className="h-screen w-full flex flex-col bg-background min-w-0">
-                        <header className="h-14 border-b border-border flex md:hidden items-center px-6 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50">
-                          <SidebarTrigger className="cursor-pointer hover:bg-accent transition-colors rounded-md p-2 -ml-2" />
-                        </header>
-                        <div className="flex-1 min-w-0 flex flex-col">
-                          <div className="flex-1 flex flex-col">
-                            <WithPagePermissions>
-                              {children}
-                            </WithPagePermissions>
+        <AppearanceProvider
+          serverTheme={appearance?.theme}
+          serverThemeMode={appearance?.themeMode}
+          serverFont={appearance?.customFont}
+          serverLogo={appearance?.logo}
+        >
+          <ArchestraQueryClientProvider>
+            <AuthProvider>
+              <ChatProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  <PostHogProviderWrapper>
+                    <OrgThemeLoader />
+                    <WithAuthCheck>
+                      <WebsocketInitializer />
+                      <SidebarProvider>
+                        <AppSidebar />
+                        <main className="h-screen w-full flex flex-col bg-background min-w-0">
+                          <header className="h-14 border-b border-border flex md:hidden items-center px-6 bg-card/50 backdrop-blur supports-backdrop-filter:bg-card/50">
+                            <SidebarTrigger className="cursor-pointer hover:bg-accent transition-colors rounded-md p-2 -ml-2" />
+                          </header>
+                          <div className="flex-1 min-w-0 flex flex-col">
+                            <div className="flex-1 flex flex-col">
+                              <WithPagePermissions>
+                                {children}
+                              </WithPagePermissions>
+                            </div>
+                            <Version />
                           </div>
-                          <Version />
-                        </div>
-                      </main>
-                      <Toaster />
-                      <OnboardingDialogWrapper />
-                    </SidebarProvider>
-                  </WithAuthCheck>
-                </PostHogProviderWrapper>
-              </ThemeProvider>
-            </ChatProvider>
-          </AuthProvider>
-        </ArchestraQueryClientProvider>
+                        </main>
+                        <Toaster />
+                        <OnboardingDialogWrapper />
+                      </SidebarProvider>
+                    </WithAuthCheck>
+                  </PostHogProviderWrapper>
+                </ThemeProvider>
+              </ChatProvider>
+            </AuthProvider>
+          </ArchestraQueryClientProvider>
+        </AppearanceProvider>
       </body>
     </html>
   );

@@ -5,8 +5,10 @@ import {
 } from "@shared";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { usePublicAppearance } from "./appearance.query";
 import { fontFamilyMap } from "@/config/themes";
 import { useOrganization, useUpdateOrganization } from "./organization.query";
+import { useServerAppearance } from "@/contexts/appearance-context";
 
 const THEME_STORAGE_KEY = "archestra-theme";
 const FONT_STORAGE_KEY = "archestra-font";
@@ -16,10 +18,28 @@ const DEFAULT_FONT: OrganizationCustomFont = "lato";
 export function useOrgTheme() {
   const pathname = usePathname();
 
-  // Don't load org theme on auth pages to avoid 401 errors during 2FA flow
+  // Check if we're on an auth page (login, signup, etc.)
   const isAuthPage = pathname?.startsWith("/auth/");
 
-  const { data, isLoading: isLoadingAppearance } = useOrganization(!isAuthPage);
+  // Get server-provided appearance data (available immediately, no API call)
+  const serverAppearance = useServerAppearance();
+
+  // Use public appearance endpoint on auth pages (unauthenticated)
+  const { data: publicAppearance } = usePublicAppearance();
+
+  // Use authenticated organization endpoint on non-auth pages
+  const { data: orgData, isLoading: isLoadingOrg } = useOrganization(
+    !isAuthPage,
+  );
+
+  // Choose data source based on page type
+  // Priority: 1. Server data (immediate), 2. API data (after fetch)
+  const apiData = isAuthPage ? publicAppearance : orgData;
+  const data = apiData || serverAppearance;
+
+  // No loading state needed - server data is available immediately
+  const isLoadingAppearance = false;
+
   const {
     theme: themeFromBackend,
     customFont: fontFromBackend,
@@ -88,9 +108,23 @@ export function useOrgTheme() {
     }
   }, [fontFromBackend, fontFromLocalStorage]);
 
-  // Don't load org theme on auth pages to avoid 401 errors during 2FA flow
+  // For auth pages, return limited data (read-only appearance, no update functions)
   if (isAuthPage) {
-    return null;
+    return {
+      currentUITheme: currentUITheme || DEFAULT_THEME,
+      currentUIFont: currentUIFont || DEFAULT_FONT,
+      themeFromBackend,
+      fontFromBackend,
+      setPreviewTheme: undefined,
+      setPreviewFont: undefined,
+      saveAppearance: undefined,
+      logo,
+      DEFAULT_THEME,
+      DEFAULT_FONT,
+      isLoadingAppearance: false,
+      applyThemeOnUI,
+      applyFontOnUI,
+    };
   }
 
   return {

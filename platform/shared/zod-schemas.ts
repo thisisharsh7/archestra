@@ -86,11 +86,13 @@ export const OrganizationCustomFontSchema = z.enum([
   "roboto",
   "source-sans-pro",
 ]);
+export const OrganizationThemeModeSchema = z.enum(["light", "dark", "system"]);
 
 export type OrganizationTheme = z.infer<typeof OrganizationThemeSchema>;
 export type OrganizationCustomFont = z.infer<
   typeof OrganizationCustomFontSchema
 >;
+export type OrganizationThemeMode = z.infer<typeof OrganizationThemeModeSchema>;
 
 export const StatisticsTimeFrameSchema = z.union([
   z.enum(["5m", "15m", "30m", "1h", "24h", "7d", "30d", "90d", "12m", "all"]),

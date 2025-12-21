@@ -114,6 +114,37 @@ class OrganizationModel {
     );
     return organization || null;
   }
+
+  /**
+   * Get public appearance settings (theme, themeMode, font, logo) for unauthenticated pages.
+   * Returns only non-sensitive branding data - safe for public access.
+   * @returns PublicAppearance object or null if no organization exists
+   */
+  static async getPublicAppearance() {
+    logger.debug("OrganizationModel.getPublicAppearance: fetching");
+    const organization = await OrganizationModel.getFirst();
+
+    if (!organization) {
+      logger.debug("OrganizationModel.getPublicAppearance: no organization found");
+      return null;
+    }
+
+    logger.debug(
+      {
+        theme: organization.theme,
+        themeMode: organization.themeMode,
+        font: organization.customFont,
+      },
+      "OrganizationModel.getPublicAppearance: completed",
+    );
+
+    return {
+      theme: organization.theme,
+      themeMode: organization.themeMode,
+      customFont: organization.customFont,
+      logo: organization.logo,
+    };
+  }
 }
 
 export default OrganizationModel;

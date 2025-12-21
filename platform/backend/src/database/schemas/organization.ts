@@ -1,4 +1,8 @@
-import type { OrganizationCustomFont, OrganizationTheme } from "@shared";
+import type {
+  OrganizationCustomFont,
+  OrganizationTheme,
+  OrganizationThemeMode,
+} from "@shared";
 import {
   boolean,
   pgTable,
@@ -30,6 +34,10 @@ const organizationsTable = pgTable("organization", {
     .$type<OrganizationCustomFont>()
     .notNull()
     .default("lato"),
+  themeMode: text("theme_mode")
+    .$type<OrganizationThemeMode>()
+    .notNull()
+    .default("system"),
   convertToolResultsToToon: boolean("convert_tool_results_to_toon")
     .notNull()
     .default(true),

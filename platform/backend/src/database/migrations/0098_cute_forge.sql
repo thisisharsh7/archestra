@@ -1,0 +1,1 @@
+ALTER TABLE "organization" ADD COLUMN "theme_mode" text DEFAULT 'system' NOT NULL;

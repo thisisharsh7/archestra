@@ -26,6 +26,7 @@ Check ./docs/docs_writer_prompt.md before changing docs files.
 
 - **Frontend**: <http://localhost:3000/>
 - **Backend**: <http://localhost:9000/> (Fastify API server)
+- **Public Appearance**: <http://localhost:9000/api/appearance/public> (GET unauthenticated - theme, font, logo for auth pages)
 - **Chat**: <http://localhost:3000/chat> (n8n expert chat with MCP tools, conversations in main sidebar)
 - **Tools**: <http://localhost:3000/tools> (Unified tools management with server-side pagination)
 - **Settings**: <http://localhost:3000/settings> (Main settings page with tabs for LLM & MCP Gateways, Dual LLM, Your Account, Members, Teams, Appearance)

@@ -1,4 +1,8 @@
-import { OrganizationCustomFontSchema, OrganizationThemeSchema } from "@shared";
+import {
+  OrganizationCustomFontSchema,
+  OrganizationThemeSchema,
+  OrganizationThemeModeSchema,
+} from "@shared";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { schema } from "@/database";
@@ -12,8 +16,20 @@ export const OrganizationCompressionScopeSchema = z.enum([
   "team",
 ]);
 
+/**
+ * Public appearance schema - used for unauthenticated access to branding settings.
+ * Only exposes theme, themeMode, logo, and font - no sensitive organization data.
+ */
+export const PublicAppearanceSchema = z.object({
+  theme: OrganizationThemeSchema,
+  themeMode: OrganizationThemeModeSchema,
+  customFont: OrganizationCustomFontSchema,
+  logo: z.string().nullable(),
+});
+
 const extendedFields = {
   theme: OrganizationThemeSchema,
+  themeMode: OrganizationThemeModeSchema,
   customFont: OrganizationCustomFontSchema,
   limitCleanupInterval: OrganizationLimitCleanupIntervalSchema,
   compressionScope: OrganizationCompressionScopeSchema,
@@ -34,6 +50,7 @@ export const UpdateOrganizationSchema = z.object({
   convertToolResultsToToon: z.boolean(),
   compressionScope: OrganizationCompressionScopeSchema,
   autoConfigureNewTools: z.boolean(),
+  themeMode: OrganizationThemeModeSchema,
 });
 
 export type OrganizationLimitCleanupInterval = z.infer<
@@ -45,3 +62,4 @@ export type OrganizationCompressionScope = z.infer<
 export type Organization = z.infer<typeof SelectOrganizationSchema>;
 export type InsertOrganization = z.infer<typeof InsertOrganizationSchema>;
 export type UpdateOrganization = z.infer<typeof UpdateOrganizationSchema>;
+export type PublicAppearance = z.infer<typeof PublicAppearanceSchema>;
