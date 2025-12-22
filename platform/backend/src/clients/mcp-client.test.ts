@@ -82,6 +82,7 @@ describe("McpClient", () => {
     vi.clearAllMocks();
     mockCallTool.mockReset();
     mockConnect.mockReset();
+    mockConnect.mockResolvedValue(undefined); // Mock connect to resolve successfully
     mockClose.mockReset();
     mockUsesStreamableHttp.mockReset();
     mockGetHttpEndpointUrl.mockReset();
@@ -134,7 +135,9 @@ describe("McpClient", () => {
         mcpServerId: n8nServer.id,
       });
 
-      await AgentToolModel.create(agentId, tool.id);
+      await AgentToolModel.create(agentId, tool.id, {
+        credentialSourceMcpServerId: n8nServer.id,
+      });
 
       mockCallTool.mockResolvedValueOnce({
         content: [{ type: "text", text: "Workflow data" }],
@@ -193,7 +196,9 @@ describe("McpClient", () => {
         mcpServerId: n8nServer.id,
       });
 
-      await AgentToolModel.create(agentId, tool.id);
+      await AgentToolModel.create(agentId, tool.id, {
+        credentialSourceMcpServerId: n8nServer.id,
+      });
 
       mockCallTool.mockResolvedValueOnce({
         content: [{ type: "text", text: "Workflow created" }],
