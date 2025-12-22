@@ -148,6 +148,20 @@ test.describe("Test self-hosted MCP server with Vault", () => {
 
     await adminPage.waitForLoadState("networkidle");
 
+    // Get the installed MCP server to get its actual name (includes userId/teamId for local servers)
+    const mcpServersResponse = await archestraApiSdk.getMcpServers({
+      headers: { Cookie: cookieHeaders },
+    });
+    if (!mcpServersResponse.data) {
+      throw new Error("Failed to fetch MCP servers");
+    }
+    const installedServer = mcpServersResponse.data.find(
+      (server) => server.catalogId === newCatalogItem.id,
+    );
+    if (!installedServer) {
+      throw new Error("Failed to find installed MCP server");
+    }
+
     // Assign tool to profiles using admin static credential
     await goToMcpRegistryAndOpenManageToolsAndOpenTokenSelect({
       page: adminPage,
@@ -160,11 +174,12 @@ test.describe("Test self-hosted MCP server with Vault", () => {
     await adminPage.waitForLoadState("networkidle");
 
     // Verify tool call result using admin static credential
+    // Use the actual server name (not catalog name) as it includes userId/teamId for local servers
     await verifyToolCallResultViaApi({
       request: adminPage.request,
       expectedResult: secretValue,
       tokenToUse: "org-token",
-      toolName: `${newCatalogItem.name}__print_archestra_test`,
+      toolName: `${installedServer.name}__print_archestra_test`,
       cookieHeaders,
     });
 
@@ -223,6 +238,20 @@ test.describe("Test self-hosted MCP server with Vault", () => {
     await clickButton({ page: adminPage, options: { name: "Install" } });
     await adminPage.waitForLoadState("networkidle");
 
+    // Get the installed MCP server to get its actual name (includes userId/teamId for local servers)
+    const mcpServersResponse = await archestraApiSdk.getMcpServers({
+      headers: { Cookie: cookieHeaders },
+    });
+    if (!mcpServersResponse.data) {
+      throw new Error("Failed to fetch MCP servers");
+    }
+    const installedServer = mcpServersResponse.data.find(
+      (server) => server.catalogId === newCatalogItem.id,
+    );
+    if (!installedServer) {
+      throw new Error("Failed to find installed MCP server");
+    }
+
     // Assign tool to profiles using admin static credential
     await goToMcpRegistryAndOpenManageToolsAndOpenTokenSelect({
       page: adminPage,
@@ -235,11 +264,12 @@ test.describe("Test self-hosted MCP server with Vault", () => {
     await adminPage.waitForLoadState("networkidle");
 
     // Verify tool call result using admin static credential
+    // Use the actual server name (not catalog name) as it includes userId/teamId for local servers
     await verifyToolCallResultViaApi({
       request: adminPage.request,
       expectedResult: secretValue,
       tokenToUse: "org-token",
-      toolName: `${newCatalogItem.name}__print_archestra_test`,
+      toolName: `${installedServer.name}__print_archestra_test`,
       cookieHeaders,
     });
 
